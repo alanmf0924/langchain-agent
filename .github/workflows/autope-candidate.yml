@@ -1,0 +1,74 @@
+name: AutoPE candidate evaluation
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_manifest:
+        description: Path relative to promptfoo-evaluation, committed for review
+        required: true
+        default: autope/candidates/review/candidates.json
+      candidate_id:
+        description: Candidate ID from the manifest
+        required: true
+      model:
+        description: Fixed model version for this run
+        required: true
+      max_cost:
+        description: Maximum permitted total candidate evaluation cost
+        required: true
+        default: '2'
+
+permissions:
+  contents: read
+
+jobs:
+  candidate-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: autope-candidate-evaluation
+    env:
+      APP_ENV: test
+      CATALOG_SOURCE: mock
+      DATABASE_URL: sqlite+pysqlite:////tmp/skin-assistant-autope-ci.sqlite3
+      UV_CACHE_DIR: /tmp/skin-assistant-uv-cache
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: promptfoo-evaluation/package-lock.json
+      - uses: astral-sh/setup-uv@v6
+      - name: Sync candidate evaluation environment
+        run: uv sync --group dev --group observability
+      - name: Install Promptfoo
+        run: npm ci --prefix promptfoo-evaluation
+      - name: Require protected model credentials
+        env:
+          OPENAI_API_KEY: ${{ secrets.AUTOPE_OPENAI_API_KEY }}
+        run: test -n "$OPENAI_API_KEY"
+      - name: Run isolated candidate gate
+        working-directory: promptfoo-evaluation
+        env:
+          AUTOPE_CANDIDATE_FILE: ${{ github.workspace }}/promptfoo-evaluation/${{ inputs.candidate_manifest }}
+          AUTOPE_CANDIDATE_ID: ${{ inputs.candidate_id }}
+          OPENAI_API_KEY: ${{ secrets.AUTOPE_OPENAI_API_KEY }}
+          OPENAI_BASE_URL: ${{ secrets.AUTOPE_OPENAI_BASE_URL }}
+          OPENAI_MODEL: ${{ inputs.model }}
+        run: npm run eval:autope
+      - name: Create human-review-only promotion report
+        working-directory: promptfoo-evaluation
+        run: |
+          npm run autope -- select-candidate \
+            --baseline reports/golden-results.json \
+            --candidate-result reports/autope-candidate-results.json \
+            --output reports/autope-promotion-report.json \
+            --max-cost '${{ inputs.max_cost }}'
+      - name: Upload candidate report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: autope-candidate-${{ inputs.candidate_id }}-${{ github.sha }}
+          path: promptfoo-evaluation/reports/
+          if-no-files-found: warn
+          retention-days: 90

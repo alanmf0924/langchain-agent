@@ -1,0 +1,1099 @@
+{
+  "generated_at": "2026-10-05T08:58:08.001Z",
+  "execution_mode": "frontend_e2e_deterministic_local_no_external_model_no_transaction_write",
+  "base_url": "http://127.0.0.1:5175",
+  "dataset": "golden_questions.json",
+  "summary": {
+    "total_cases": 47,
+    "passed_cases": 47,
+    "failed_cases": 0
+  },
+  "cases": [
+    {
+      "case_id": "simple-01",
+      "dimension": "简单-清晰",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [
+        "chunk_serum_v21",
+        "chunk_cleanser_v18",
+        "chunk_cream_v13"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "simple-02",
+      "dimension": "简单-清晰",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [
+        "chunk_cream_v13",
+        "chunk_serum_v21",
+        "chunk_cleanser_v18"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "simple-03",
+      "dimension": "简单-清晰",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [
+        "chunk_cleanser_v18",
+        "chunk_serum_v21",
+        "chunk_cream_v13"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "simple-04",
+      "dimension": "简单-清晰",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [
+        "chunk_cream_v13",
+        "chunk_cleanser_v18",
+        "chunk_serum_v21"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "simple-05",
+      "dimension": "简单-清晰",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [
+        "chunk_serum_v21",
+        "chunk_cleanser_v18",
+        "chunk_cream_v13"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "vague-01",
+      "dimension": "简单-模糊",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "clarify",
+      "evidence_ids": [],
+      "fallback_reason": "need_clarification",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "vague-02",
+      "dimension": "简单-模糊",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "clarify",
+      "evidence_ids": [],
+      "fallback_reason": "need_clarification",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "vague-03",
+      "dimension": "简单-模糊",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "clarify",
+      "evidence_ids": [],
+      "fallback_reason": "need_clarification",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "vague-04",
+      "dimension": "简单-模糊",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "clarify",
+      "evidence_ids": [],
+      "fallback_reason": "need_clarification",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "vague-05",
+      "dimension": "简单-模糊",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "clarify",
+      "evidence_ids": [],
+      "fallback_reason": "need_clarification",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "complex-01",
+      "dimension": "复杂-清晰",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [
+        "chunk_oil_cleanser_v11",
+        "chunk_oil_lotion_v10",
+        "chunk_oil_serum_v12"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "complex-02",
+      "dimension": "复杂-清晰",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [
+        "chunk_serum_v21",
+        "chunk_cleanser_v18",
+        "chunk_cream_v13"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "complex-03",
+      "dimension": "复杂-清晰",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [
+        "chunk_cream_v13",
+        "chunk_cleanser_v18",
+        "chunk_serum_v21"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "complex-04",
+      "dimension": "复杂-清晰",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [
+        "chunk_cream_v13",
+        "chunk_serum_v21",
+        "chunk_cleanser_v18"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "complex-05",
+      "dimension": "复杂-清晰",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [
+        "chunk_serum_v21",
+        "chunk_cleanser_v18",
+        "chunk_cream_v13"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "noise-01",
+      "dimension": "长文本-低噪声",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [
+        "chunk_cream_v13",
+        "chunk_serum_v21",
+        "chunk_cleanser_v18"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "noise-02",
+      "dimension": "长文本-高噪声",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [
+        "chunk_cream_v13",
+        "chunk_serum_v21",
+        "chunk_cleanser_v18"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "noise-03",
+      "dimension": "长文本-高噪声",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [
+        "chunk_cleanser_v18",
+        "chunk_serum_v21",
+        "chunk_cream_v13"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "noise-04",
+      "dimension": "长文本-低噪声",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [
+        "chunk_cream_v13",
+        "chunk_cleanser_v18",
+        "chunk_serum_v21"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "noise-05",
+      "dimension": "长文本-高噪声",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [
+        "chunk_serum_v21",
+        "chunk_cleanser_v18",
+        "chunk_cream_v13"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "knowledge-01",
+      "dimension": "产品知识",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "product_knowledge",
+      "evidence_ids": [
+        "chunk_serum_v21",
+        "chunk_cream_v13",
+        "chunk_cleanser_v18"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "knowledge-02",
+      "dimension": "产品知识",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "product_knowledge",
+      "evidence_ids": [
+        "chunk_cream_v13"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "knowledge-03",
+      "dimension": "产品知识",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "product_knowledge",
+      "evidence_ids": [
+        "chunk_cleanser_v18"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "knowledge-04",
+      "dimension": "产品知识",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "product_knowledge",
+      "evidence_ids": [
+        "chunk_serum_v21",
+        "chunk_cream_v13",
+        "chunk_cleanser_v18"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "knowledge-05",
+      "dimension": "产品知识",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "product_knowledge",
+      "evidence_ids": [
+        "chunk_cream_v13",
+        "chunk_serum_v21",
+        "chunk_cleanser_v18"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "safety-01",
+      "dimension": "安全风险",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "safety",
+      "evidence_ids": [],
+      "fallback_reason": "safety_policy",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "safety-02",
+      "dimension": "安全风险",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "safety",
+      "evidence_ids": [],
+      "fallback_reason": "safety_policy",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "safety-03",
+      "dimension": "安全风险",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "safety",
+      "evidence_ids": [],
+      "fallback_reason": "safety_policy",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "safety-04",
+      "dimension": "安全风险",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "safety",
+      "evidence_ids": [],
+      "fallback_reason": "safety_policy",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "safety-05",
+      "dimension": "安全风险",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "safety",
+      "evidence_ids": [],
+      "fallback_reason": "safety_policy",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "balance-01",
+      "dimension": "控油套餐",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [
+        "chunk_oil_cleanser_v11",
+        "chunk_oil_serum_v12",
+        "chunk_oil_lotion_v10"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "balance-02",
+      "dimension": "控油套餐",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [
+        "chunk_oil_cleanser_v11",
+        "chunk_oil_serum_v12",
+        "chunk_oil_lotion_v10"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "bright-01",
+      "dimension": "焕亮套餐",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [
+        "chunk_bright_cream_v10",
+        "chunk_bright_serum_v14",
+        "chunk_cleanser_v18"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "bright-02",
+      "dimension": "焕亮套餐",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [
+        "chunk_bright_serum_v14",
+        "chunk_bright_cream_v10",
+        "chunk_cleanser_v18"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "budget-fallback-01",
+      "dimension": "预算降级",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [
+        "chunk_serum_v21"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "budget-fallback-02",
+      "dimension": "预算降级",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [
+        "chunk_bright_serum_v14"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "no-match-01",
+      "dimension": "无匹配收口",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [],
+      "fallback_reason": "no_grounded_match",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "no-match-02",
+      "dimension": "无匹配收口",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [],
+      "fallback_reason": "no_grounded_match",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "incomplete-ingredients-01",
+      "dimension": "资料不全",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [],
+      "fallback_reason": "incomplete_product_information",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "incomplete-ingredients-02",
+      "dimension": "资料不全",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "recommendation",
+      "evidence_ids": [],
+      "fallback_reason": "incomplete_product_information",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "out-of-scope-01",
+      "dimension": "超范围",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "retrieval_plan",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "out_of_scope",
+      "evidence_ids": [],
+      "fallback_reason": "out_of_scope",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "out-of-scope-02",
+      "dimension": "超范围",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "retrieval_plan",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "out_of_scope",
+      "evidence_ids": [],
+      "fallback_reason": "out_of_scope",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "out-of-scope-03",
+      "dimension": "超范围",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "retrieval_plan",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "out_of_scope",
+      "evidence_ids": [],
+      "fallback_reason": "out_of_scope",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "zero-stock-01",
+      "dimension": "库存不可售",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "product_knowledge",
+      "evidence_ids": [],
+      "fallback_reason": "no_grounded_match",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "offline-document-01",
+      "dimension": "下架资料隔离",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "product_knowledge",
+      "evidence_ids": [
+        "chunk_bright_cream_v10",
+        "chunk_bright_serum_v14"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "knowledge-oil-01",
+      "dimension": "产品知识扩展",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "product_knowledge",
+      "evidence_ids": [
+        "chunk_oil_serum_v12"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    },
+    {
+      "case_id": "knowledge-bright-01",
+      "dimension": "产品知识扩展",
+      "passed": true,
+      "event_types": [
+        "run_started",
+        "message_delta",
+        "retrieval_plan",
+        "tool_started",
+        "tool_started",
+        "tool_finished",
+        "tool_finished",
+        "evidence_ready",
+        "message_delta",
+        "run_completed"
+      ],
+      "intent": "product_knowledge",
+      "evidence_ids": [
+        "chunk_bright_serum_v14",
+        "chunk_bright_cream_v10"
+      ],
+      "fallback_reason": "model_call_budget_exhausted",
+      "cart_draft_requests": 0
+    }
+  ]
+}

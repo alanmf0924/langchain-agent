@@ -1,0 +1,46 @@
+[project]
+name = "skin-assistant-langchain-backend"
+version = "0.1.0"
+description = "澄肌护肤选购助手：LangChain 工具、受证据约束回答与确认闭环"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115,<1.0",
+  "uvicorn[standard]>=0.34,<1.0",
+  "langchain>=0.3,<2.0",
+  "langgraph>=1.2,<2.0",
+  "langchain-openai>=0.3,<2.0",
+  "python-dotenv>=1.0,<2.0",
+  "httpx>=0.28,<1.0",
+  "SQLAlchemy[asyncio]>=2.0,<3.0",
+  "psycopg[binary]>=3.2,<4.0",
+  "alembic>=1.14,<2.0",
+  "pwdlib[argon2]>=0.3,<1.0",
+  "PyJWT>=2.10,<3.0",
+  "python-multipart>=0.0.20,<1.0",
+]
+
+[dependency-groups]
+autope = [
+    "dspy-ai>=2.6",
+]
+dev = [
+  "langgraph-cli[inmem]>=0.4,<1.0",
+  "pytest>=8.3,<9.0",
+  "ruff>=0.9,<1.0",
+  "aiosqlite>=0.21,<1.0",
+]
+observability = [
+    "langfuse>=4.7,<5",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+# FastAPI 将 Depends/Cookie 声明为端点签名默认值，是框架规定的依赖注入写法。
+ignore = ["B008"]

@@ -1,0 +1,7 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "skin_assistant": "./app/langgraph_entry.py:graph"
+  },
+  "env": ".env"
+}

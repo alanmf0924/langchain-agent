@@ -1,0 +1,6 @@
+node_modules/
+.promptfoo/
+__pycache__/
+.DS_Store
+reports/*.json
+reports/*.html

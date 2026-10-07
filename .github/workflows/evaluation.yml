@@ -1,0 +1,68 @@
+name: Deterministic evaluation
+
+on:
+  pull_request:
+    paths:
+      - app/**
+      - eval/**
+      - tests/**
+      - promptfoo-evaluation/**
+      - pyproject.toml
+      - uv.lock
+      - .nvmrc
+      - .github/workflows/evaluation.yml
+  push:
+    branches: [main]
+    paths:
+      - app/**
+      - eval/**
+      - tests/**
+      - promptfoo-evaluation/**
+      - pyproject.toml
+      - uv.lock
+      - .nvmrc
+
+permissions:
+  contents: read
+
+jobs:
+  deterministic-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      APP_ENV: test
+      CATALOG_SOURCE: mock
+      DATABASE_URL: sqlite+pysqlite:////tmp/skin-assistant-ci.sqlite3
+      UV_CACHE_DIR: /tmp/skin-assistant-uv-cache
+      RUFF_CACHE_DIR: /tmp/skin-assistant-ruff-cache
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: promptfoo-evaluation/package-lock.json
+      - uses: astral-sh/setup-uv@v6
+      - name: Sync test environment
+        run: uv sync --group dev
+      - name: Install Promptfoo
+        run: npm ci --prefix promptfoo-evaluation
+      - name: Check runtime and static quality
+        run: |
+          npm --prefix promptfoo-evaluation run runtime:check
+          uv run --no-sync ruff check \
+            app/main.py app/observability.py eval tests/test_observability.py promptfoo-evaluation
+      - name: Run deterministic backend and AutoPE control-plane tests
+        run: |
+          uv run --no-sync pytest tests/test_observability.py -q
+          npm --prefix promptfoo-evaluation run test:autope
+      - name: Run Promptfoo golden hard gate
+        run: npm --prefix promptfoo-evaluation run eval
+      - name: Upload evaluation artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deterministic-evaluation-${{ github.sha }}
+          path: promptfoo-evaluation/reports/
+          if-no-files-found: warn
+          retention-days: 30

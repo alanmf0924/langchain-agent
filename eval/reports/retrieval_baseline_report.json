@@ -1,0 +1,751 @@
+{
+  "report_version": "retrieval-baseline-1",
+  "generated_at": "2026-09-30T23:38:21.469410+00:00",
+  "execution_mode": "deterministic_local_no_external_model_or_transaction_write",
+  "scope": {
+    "golden_cases": 30,
+    "evaluated_evidence_cases": 20,
+    "total_document_count": 9,
+    "searchable_document_count": 8,
+    "globally_blocked_document_ids": [
+      "chunk_offline_v10"
+    ],
+    "ranking_scope": "审核且在售的全库文档级 Top 5；不混入候选 SKU 业务过滤。",
+    "citation_scope": "实际 Agent 工作流的 Top 3 引用，保留候选 SKU、审核和在售过滤。"
+  },
+  "metrics": {
+    "recall_at_5": 0.9333,
+    "mrr": 1.0,
+    "recall_at_3": 0.8167,
+    "first_hit_at_3": 1.0,
+    "rank_4_5_rescue_rate": 0.0,
+    "citation_correctness": 0.7966,
+    "violation_retrieval_rate": 0.0,
+    "violation_case_rate": 0.0
+  },
+  "reranker_gate": {
+    "corpus_window": [
+      20,
+      50
+    ],
+    "min_recall_at_5": 0.95,
+    "min_first_hit_at_3": 0.9,
+    "min_recall_at_3": 0.85,
+    "should_add_reranker": false,
+    "decision": "not_now",
+    "reason": "可检索语料为 8 份，不在 20–50 份的验证窗口；先接入并审核真实资料，再测排序收益。"
+  },
+  "cases": [
+    {
+      "case_id": "simple-01",
+      "question": "换季干燥紧绷，预算 600 元，想做基础修护。",
+      "expected_evidence_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "must_not_retrieve_ids": [
+        "chunk_offline_v10"
+      ],
+      "ranked_evidence_ids_top5": [
+        "chunk_serum_v21",
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_bright_cream_v10"
+      ],
+      "agent_citation_ids_top3": [
+        "chunk_serum_v21",
+        "chunk_cleanser_v18",
+        "chunk_cream_v13"
+      ],
+      "recall_at_5": 1.0,
+      "recall_at_3": 1.0,
+      "reciprocal_rank": 1.0,
+      "first_relevant_rank": 1,
+      "correct_citation_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "incorrect_citation_ids": [],
+      "recalled_violation_ids": [],
+      "citation_violation_ids": []
+    },
+    {
+      "case_id": "simple-02",
+      "question": "洗脸后干，想保湿修护。",
+      "expected_evidence_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "must_not_retrieve_ids": [
+        "chunk_offline_v10"
+      ],
+      "ranked_evidence_ids_top5": [
+        "chunk_cream_v13",
+        "chunk_bright_cream_v10",
+        "chunk_serum_v21",
+        "chunk_oil_lotion_v10",
+        "chunk_oil_serum_v12"
+      ],
+      "agent_citation_ids_top3": [
+        "chunk_cream_v13",
+        "chunk_serum_v21",
+        "chunk_cleanser_v18"
+      ],
+      "recall_at_5": 0.6667,
+      "recall_at_3": 0.6667,
+      "reciprocal_rank": 1.0,
+      "first_relevant_rank": 1,
+      "correct_citation_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "incorrect_citation_ids": [],
+      "recalled_violation_ids": [],
+      "citation_violation_ids": []
+    },
+    {
+      "case_id": "simple-03",
+      "question": "最近泛红敏感，想找温和的修护产品。",
+      "expected_evidence_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "must_not_retrieve_ids": [
+        "chunk_offline_v10"
+      ],
+      "ranked_evidence_ids_top5": [
+        "chunk_cleanser_v18",
+        "chunk_serum_v21",
+        "chunk_cream_v13",
+        "chunk_bright_cream_v10",
+        "chunk_oil_cleanser_v11"
+      ],
+      "agent_citation_ids_top3": [
+        "chunk_cleanser_v18",
+        "chunk_serum_v21",
+        "chunk_cream_v13"
+      ],
+      "recall_at_5": 1.0,
+      "recall_at_3": 1.0,
+      "reciprocal_rank": 1.0,
+      "first_relevant_rank": 1,
+      "correct_citation_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "incorrect_citation_ids": [],
+      "recalled_violation_ids": [],
+      "citation_violation_ids": []
+    },
+    {
+      "case_id": "simple-04",
+      "question": "皮肤紧绷，推荐保湿护理。",
+      "expected_evidence_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "must_not_retrieve_ids": [
+        "chunk_offline_v10"
+      ],
+      "ranked_evidence_ids_top5": [
+        "chunk_cream_v13",
+        "chunk_bright_cream_v10",
+        "chunk_cleanser_v18",
+        "chunk_oil_lotion_v10",
+        "chunk_serum_v21"
+      ],
+      "agent_citation_ids_top3": [
+        "chunk_cream_v13",
+        "chunk_cleanser_v18",
+        "chunk_serum_v21"
+      ],
+      "recall_at_5": 1.0,
+      "recall_at_3": 0.6667,
+      "reciprocal_rank": 1.0,
+      "first_relevant_rank": 1,
+      "correct_citation_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "incorrect_citation_ids": [],
+      "recalled_violation_ids": [],
+      "citation_violation_ids": []
+    },
+    {
+      "case_id": "simple-05",
+      "question": "换季时脸干，想买修护套装。",
+      "expected_evidence_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "must_not_retrieve_ids": [
+        "chunk_offline_v10"
+      ],
+      "ranked_evidence_ids_top5": [
+        "chunk_serum_v21",
+        "chunk_cream_v13",
+        "chunk_bright_cream_v10",
+        "chunk_cleanser_v18"
+      ],
+      "agent_citation_ids_top3": [
+        "chunk_serum_v21",
+        "chunk_cream_v13",
+        "chunk_cleanser_v18"
+      ],
+      "recall_at_5": 1.0,
+      "recall_at_3": 0.6667,
+      "reciprocal_rank": 1.0,
+      "first_relevant_rank": 1,
+      "correct_citation_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "incorrect_citation_ids": [],
+      "recalled_violation_ids": [],
+      "citation_violation_ids": []
+    },
+    {
+      "case_id": "complex-01",
+      "question": "脸颊干、T 区出油，正在用 A 酸，预算 500，想要温和修护。",
+      "expected_evidence_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "must_not_retrieve_ids": [
+        "chunk_offline_v10"
+      ],
+      "ranked_evidence_ids_top5": [
+        "chunk_cleanser_v18",
+        "chunk_oil_cleanser_v11",
+        "chunk_serum_v21",
+        "chunk_cream_v13",
+        "chunk_oil_lotion_v10"
+      ],
+      "agent_citation_ids_top3": [
+        "chunk_oil_cleanser_v11",
+        "chunk_oil_lotion_v10",
+        "chunk_oil_serum_v12"
+      ],
+      "recall_at_5": 1.0,
+      "recall_at_3": 0.6667,
+      "reciprocal_rank": 1.0,
+      "first_relevant_rank": 1,
+      "correct_citation_ids": [],
+      "incorrect_citation_ids": [
+        "chunk_oil_cleanser_v11",
+        "chunk_oil_lotion_v10",
+        "chunk_oil_serum_v12"
+      ],
+      "recalled_violation_ids": [],
+      "citation_violation_ids": []
+    },
+    {
+      "case_id": "complex-02",
+      "question": "换季泛红紧绷，不想要刺激产品，预算 600，想修护。",
+      "expected_evidence_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "must_not_retrieve_ids": [
+        "chunk_offline_v10"
+      ],
+      "ranked_evidence_ids_top5": [
+        "chunk_serum_v21",
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_bright_cream_v10",
+        "chunk_oil_lotion_v10"
+      ],
+      "agent_citation_ids_top3": [
+        "chunk_serum_v21",
+        "chunk_cream_v13",
+        "chunk_cleanser_v18"
+      ],
+      "recall_at_5": 1.0,
+      "recall_at_3": 1.0,
+      "reciprocal_rank": 1.0,
+      "first_relevant_rank": 1,
+      "correct_citation_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "incorrect_citation_ids": [],
+      "recalled_violation_ids": [],
+      "citation_violation_ids": []
+    },
+    {
+      "case_id": "complex-03",
+      "question": "洗脸后干，但白天会紧绷，已经在用精华，想补一个保湿产品。",
+      "expected_evidence_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "must_not_retrieve_ids": [
+        "chunk_offline_v10"
+      ],
+      "ranked_evidence_ids_top5": [
+        "chunk_cream_v13",
+        "chunk_bright_cream_v10",
+        "chunk_oil_lotion_v10",
+        "chunk_cleanser_v18",
+        "chunk_serum_v21"
+      ],
+      "agent_citation_ids_top3": [
+        "chunk_cream_v13",
+        "chunk_cleanser_v18",
+        "chunk_serum_v21"
+      ],
+      "recall_at_5": 1.0,
+      "recall_at_3": 0.3333,
+      "reciprocal_rank": 1.0,
+      "first_relevant_rank": 1,
+      "correct_citation_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "incorrect_citation_ids": [],
+      "recalled_violation_ids": [],
+      "citation_violation_ids": []
+    },
+    {
+      "case_id": "complex-04",
+      "question": "敏感泛红，预算不要超过 600，避开刺激性护理，想做保湿修护。",
+      "expected_evidence_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "must_not_retrieve_ids": [
+        "chunk_offline_v10"
+      ],
+      "ranked_evidence_ids_top5": [
+        "chunk_cream_v13",
+        "chunk_bright_cream_v10",
+        "chunk_serum_v21",
+        "chunk_oil_lotion_v10",
+        "chunk_oil_serum_v12"
+      ],
+      "agent_citation_ids_top3": [
+        "chunk_cream_v13",
+        "chunk_serum_v21",
+        "chunk_cleanser_v18"
+      ],
+      "recall_at_5": 0.6667,
+      "recall_at_3": 0.6667,
+      "reciprocal_rank": 1.0,
+      "first_relevant_rank": 1,
+      "correct_citation_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "incorrect_citation_ids": [],
+      "recalled_violation_ids": [],
+      "citation_violation_ids": []
+    },
+    {
+      "case_id": "complex-05",
+      "question": "干燥紧绷又担心成分不适，正在刷酸，想选基础修护。",
+      "expected_evidence_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "must_not_retrieve_ids": [
+        "chunk_offline_v10"
+      ],
+      "ranked_evidence_ids_top5": [
+        "chunk_serum_v21",
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_bright_cream_v10",
+        "chunk_bright_serum_v14"
+      ],
+      "agent_citation_ids_top3": [
+        "chunk_serum_v21",
+        "chunk_cleanser_v18",
+        "chunk_cream_v13"
+      ],
+      "recall_at_5": 1.0,
+      "recall_at_3": 1.0,
+      "reciprocal_rank": 1.0,
+      "first_relevant_rank": 1,
+      "correct_citation_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "incorrect_citation_ids": [],
+      "recalled_violation_ids": [],
+      "citation_violation_ids": []
+    },
+    {
+      "case_id": "noise-01",
+      "question": "最近工作忙经常熬夜，洗完脸有点紧，朋友说要保湿；预算不要太高，想在换季前做修护。",
+      "expected_evidence_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "must_not_retrieve_ids": [
+        "chunk_offline_v10"
+      ],
+      "ranked_evidence_ids_top5": [
+        "chunk_cream_v13",
+        "chunk_bright_cream_v10",
+        "chunk_serum_v21",
+        "chunk_oil_lotion_v10",
+        "chunk_cleanser_v18"
+      ],
+      "agent_citation_ids_top3": [
+        "chunk_cream_v13",
+        "chunk_serum_v21",
+        "chunk_cleanser_v18"
+      ],
+      "recall_at_5": 1.0,
+      "recall_at_3": 0.6667,
+      "reciprocal_rank": 1.0,
+      "first_relevant_rank": 1,
+      "correct_citation_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "incorrect_citation_ids": [],
+      "recalled_violation_ids": [],
+      "citation_violation_ids": []
+    },
+    {
+      "case_id": "noise-02",
+      "question": "本来只是来看看，前几天还下雨，今天照镜子觉得脸有点干，不确定是不是空调；反正想买点保湿修护的。",
+      "expected_evidence_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "must_not_retrieve_ids": [
+        "chunk_offline_v10"
+      ],
+      "ranked_evidence_ids_top5": [
+        "chunk_cream_v13",
+        "chunk_bright_cream_v10",
+        "chunk_serum_v21",
+        "chunk_oil_lotion_v10",
+        "chunk_oil_serum_v12"
+      ],
+      "agent_citation_ids_top3": [
+        "chunk_cream_v13",
+        "chunk_serum_v21",
+        "chunk_cleanser_v18"
+      ],
+      "recall_at_5": 0.6667,
+      "recall_at_3": 0.6667,
+      "reciprocal_rank": 1.0,
+      "first_relevant_rank": 1,
+      "correct_citation_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "incorrect_citation_ids": [],
+      "recalled_violation_ids": [],
+      "citation_violation_ids": []
+    },
+    {
+      "case_id": "noise-03",
+      "question": "朋友推荐了很多牌子我都记不住，之前洗完脸紧绷，最近换季又有点泛红，预算六百以内，想温和修护。",
+      "expected_evidence_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "must_not_retrieve_ids": [
+        "chunk_offline_v10"
+      ],
+      "ranked_evidence_ids_top5": [
+        "chunk_cleanser_v18",
+        "chunk_serum_v21",
+        "chunk_cream_v13",
+        "chunk_oil_cleanser_v11",
+        "chunk_bright_cream_v10"
+      ],
+      "agent_citation_ids_top3": [
+        "chunk_cleanser_v18",
+        "chunk_serum_v21",
+        "chunk_cream_v13"
+      ],
+      "recall_at_5": 1.0,
+      "recall_at_3": 1.0,
+      "reciprocal_rank": 1.0,
+      "first_relevant_rank": 1,
+      "correct_citation_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "incorrect_citation_ids": [],
+      "recalled_violation_ids": [],
+      "citation_violation_ids": []
+    },
+    {
+      "case_id": "noise-04",
+      "question": "我不懂成分，只知道脸干、洗后紧绷，想要保湿，不想买太多步骤。",
+      "expected_evidence_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "must_not_retrieve_ids": [
+        "chunk_offline_v10"
+      ],
+      "ranked_evidence_ids_top5": [
+        "chunk_cream_v13",
+        "chunk_bright_cream_v10",
+        "chunk_cleanser_v18",
+        "chunk_serum_v21",
+        "chunk_oil_lotion_v10"
+      ],
+      "agent_citation_ids_top3": [
+        "chunk_cream_v13",
+        "chunk_cleanser_v18",
+        "chunk_serum_v21"
+      ],
+      "recall_at_5": 1.0,
+      "recall_at_3": 0.6667,
+      "reciprocal_rank": 1.0,
+      "first_relevant_rank": 1,
+      "correct_citation_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "incorrect_citation_ids": [],
+      "recalled_violation_ids": [],
+      "citation_violation_ids": []
+    },
+    {
+      "case_id": "noise-05",
+      "question": "今天先问问，不一定马上买。最近天气变了，脸有点干，我同事说修护精华不错，预算 600 左右。",
+      "expected_evidence_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "must_not_retrieve_ids": [
+        "chunk_offline_v10"
+      ],
+      "ranked_evidence_ids_top5": [
+        "chunk_serum_v21",
+        "chunk_cream_v13",
+        "chunk_bright_cream_v10",
+        "chunk_bright_serum_v14",
+        "chunk_oil_serum_v12"
+      ],
+      "agent_citation_ids_top3": [
+        "chunk_serum_v21",
+        "chunk_cream_v13",
+        "chunk_cleanser_v18"
+      ],
+      "recall_at_5": 0.6667,
+      "recall_at_3": 0.6667,
+      "reciprocal_rank": 1.0,
+      "first_relevant_rank": 1,
+      "correct_citation_ids": [
+        "chunk_cleanser_v18",
+        "chunk_cream_v13",
+        "chunk_serum_v21"
+      ],
+      "incorrect_citation_ids": [],
+      "recalled_violation_ids": [],
+      "citation_violation_ids": []
+    },
+    {
+      "case_id": "knowledge-01",
+      "question": "澄肌屏障修护精华怎么用？",
+      "expected_evidence_ids": [
+        "chunk_serum_v21"
+      ],
+      "must_not_retrieve_ids": [
+        "chunk_offline_v10"
+      ],
+      "ranked_evidence_ids_top5": [
+        "chunk_serum_v21",
+        "chunk_cream_v13",
+        "chunk_bright_cream_v10",
+        "chunk_oil_serum_v12",
+        "chunk_bright_serum_v14"
+      ],
+      "agent_citation_ids_top3": [
+        "chunk_serum_v21",
+        "chunk_cream_v13",
+        "chunk_cleanser_v18"
+      ],
+      "recall_at_5": 1.0,
+      "recall_at_3": 1.0,
+      "reciprocal_rank": 1.0,
+      "first_relevant_rank": 1,
+      "correct_citation_ids": [
+        "chunk_serum_v21"
+      ],
+      "incorrect_citation_ids": [
+        "chunk_cream_v13",
+        "chunk_cleanser_v18"
+      ],
+      "recalled_violation_ids": [],
+      "citation_violation_ids": []
+    },
+    {
+      "case_id": "knowledge-02",
+      "question": "澄肌神经酰胺面霜有什么注意事项？",
+      "expected_evidence_ids": [
+        "chunk_cream_v13"
+      ],
+      "must_not_retrieve_ids": [
+        "chunk_offline_v10"
+      ],
+      "ranked_evidence_ids_top5": [
+        "chunk_cream_v13",
+        "chunk_bright_cream_v10",
+        "chunk_bright_serum_v14",
+        "chunk_serum_v21",
+        "chunk_oil_serum_v12"
+      ],
+      "agent_citation_ids_top3": [
+        "chunk_cream_v13",
+        "chunk_cleanser_v18",
+        "chunk_oil_cleanser_v11"
+      ],
+      "recall_at_5": 1.0,
+      "recall_at_3": 1.0,
+      "reciprocal_rank": 1.0,
+      "first_relevant_rank": 1,
+      "correct_citation_ids": [
+        "chunk_cream_v13"
+      ],
+      "incorrect_citation_ids": [
+        "chunk_cleanser_v18",
+        "chunk_oil_cleanser_v11"
+      ],
+      "recalled_violation_ids": [],
+      "citation_violation_ids": []
+    },
+    {
+      "case_id": "knowledge-03",
+      "question": "澄肌氨基酸洁面乳适合什么情况？",
+      "expected_evidence_ids": [
+        "chunk_cleanser_v18"
+      ],
+      "must_not_retrieve_ids": [
+        "chunk_offline_v10"
+      ],
+      "ranked_evidence_ids_top5": [
+        "chunk_cleanser_v18",
+        "chunk_oil_cleanser_v11",
+        "chunk_oil_lotion_v10",
+        "chunk_oil_serum_v12",
+        "chunk_serum_v21"
+      ],
+      "agent_citation_ids_top3": [
+        "chunk_cleanser_v18",
+        "chunk_oil_cleanser_v11"
+      ],
+      "recall_at_5": 1.0,
+      "recall_at_3": 1.0,
+      "reciprocal_rank": 1.0,
+      "first_relevant_rank": 1,
+      "correct_citation_ids": [
+        "chunk_cleanser_v18"
+      ],
+      "incorrect_citation_ids": [
+        "chunk_oil_cleanser_v11"
+      ],
+      "recalled_violation_ids": [],
+      "citation_violation_ids": []
+    },
+    {
+      "case_id": "knowledge-04",
+      "question": "屏障修护精华的成分是什么？",
+      "expected_evidence_ids": [
+        "chunk_serum_v21"
+      ],
+      "must_not_retrieve_ids": [
+        "chunk_offline_v10"
+      ],
+      "ranked_evidence_ids_top5": [
+        "chunk_serum_v21",
+        "chunk_cream_v13",
+        "chunk_bright_serum_v14",
+        "chunk_bright_cream_v10",
+        "chunk_oil_serum_v12"
+      ],
+      "agent_citation_ids_top3": [
+        "chunk_serum_v21",
+        "chunk_cream_v13",
+        "chunk_cleanser_v18"
+      ],
+      "recall_at_5": 1.0,
+      "recall_at_3": 1.0,
+      "reciprocal_rank": 1.0,
+      "first_relevant_rank": 1,
+      "correct_citation_ids": [
+        "chunk_serum_v21"
+      ],
+      "incorrect_citation_ids": [
+        "chunk_cream_v13",
+        "chunk_cleanser_v18"
+      ],
+      "recalled_violation_ids": [],
+      "citation_violation_ids": []
+    },
+    {
+      "case_id": "knowledge-05",
+      "question": "神经酰胺面霜能不能用于干燥紧绷？",
+      "expected_evidence_ids": [
+        "chunk_cream_v13"
+      ],
+      "must_not_retrieve_ids": [
+        "chunk_offline_v10"
+      ],
+      "ranked_evidence_ids_top5": [
+        "chunk_cream_v13",
+        "chunk_serum_v21",
+        "chunk_cleanser_v18",
+        "chunk_bright_cream_v10",
+        "chunk_bright_serum_v14"
+      ],
+      "agent_citation_ids_top3": [
+        "chunk_cream_v13",
+        "chunk_serum_v21",
+        "chunk_cleanser_v18"
+      ],
+      "recall_at_5": 1.0,
+      "recall_at_3": 1.0,
+      "reciprocal_rank": 1.0,
+      "first_relevant_rank": 1,
+      "correct_citation_ids": [
+        "chunk_cream_v13"
+      ],
+      "incorrect_citation_ids": [
+        "chunk_serum_v21",
+        "chunk_cleanser_v18"
+      ],
+      "recalled_violation_ids": [],
+      "citation_violation_ids": []
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: 澄肌护肤助手 AutoPE 候选评测 - 隔离模型回答链
+
+prompts:
+  - "{{input}}"
+
+providers:
+  - id: file://provider.py
+    label: skin-assistant-autope-candidate
+    config:
+      pythonExecutable: ../.venv/bin/python
+
+defaultTest:
+  assert:
+    - type: python
+      value: file://assertions.py
+      metric: golden_contract
+
+# 同时运行固定黄金题和经过人工审核的线上回流题；未审核记录永远不会被读取。
+tests:
+  - file://autope_tests.py:generate_tests

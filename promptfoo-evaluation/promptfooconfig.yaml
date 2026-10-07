@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: 澄肌护肤助手 V1 黄金集 - 确定性安全评测
+
+# Provider 返回结构化 JSON，断言读取其业务字段，而不是用自然语言猜测结果。
+prompts:
+  - "{{input}}"
+
+providers:
+  - id: file://provider.py
+    label: skin-assistant-deterministic-local
+    config:
+      # 使用业务仓库已解析依赖的虚拟环境；Provider 内部会把仓库根目录加入 sys.path。
+      pythonExecutable: ../.venv/bin/python
+
+defaultTest:
+  assert:
+    - type: python
+      value: file://assertions.py
+      metric: golden_contract
+
+# 不复制黄金题：每次执行均从上级仓库的唯一黄金集读取，避免两套数据漂移。
+tests:
+  - file://tests.py:generate_tests

@@ -1,0 +1,20 @@
+{
+  "name": "skin-assistant-promptfoo-evaluation",
+  "version": "0.1.0",
+  "private": true,
+  "description": "澄肌护肤助手的独立 Promptfoo 黄金集评测工程",
+  "engines": {
+    "node": ">=22.22.0"
+  },
+  "scripts": {
+    "runtime:check": "../.venv/bin/python scripts/check_runtime.py",
+    "eval": "CATALOG_SOURCE=mock PROMPTFOO_PYTHON=../.venv/bin/python PROMPTFOO_CONFIG_DIR=.promptfoo PROMPTFOO_DISABLE_TELEMETRY=true PROMPTFOO_CACHE_TYPE=memory node ./node_modules/promptfoo/dist/src/entrypoint.js eval -c promptfooconfig.yaml --output reports/golden-results.json",
+    "eval:autope": "CATALOG_SOURCE=mock AUTOPE_LIVE_EVAL=true PROMPTFOO_PYTHON=../.venv/bin/python PROMPTFOO_CONFIG_DIR=.promptfoo PROMPTFOO_DISABLE_TELEMETRY=true PROMPTFOO_CACHE_TYPE=memory node ./node_modules/promptfoo/dist/src/entrypoint.js eval -c promptfooconfig.autope.yaml --output reports/autope-candidate-results.json",
+    "autope": "../.venv/bin/python autope.py",
+    "test:autope": "../.venv/bin/python -m unittest -v test_autope.py",
+    "view": "PROMPTFOO_CONFIG_DIR=.promptfoo PROMPTFOO_DISABLE_TELEMETRY=true promptfoo view"
+  },
+  "devDependencies": {
+    "promptfoo": "0.123.1"
+  }
+}
