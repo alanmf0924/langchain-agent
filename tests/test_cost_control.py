@@ -2,6 +2,7 @@ import asyncio
 from time import sleep
 
 from app.answer_chain import MAX_EVIDENCE_CHARS_PER_ITEM, GroundedAnswerChain
+from app.persistence import SqlAssistantRepository
 from app.service import SkinAssistantService
 
 
@@ -45,7 +46,9 @@ def test_evidence_context_is_hard_capped_before_model_call() -> None:
 
 
 def test_provider_usage_is_preserved_when_provider_returns_it() -> None:
-    service = SkinAssistantService()
+    service = SkinAssistantService(
+        repository=SqlAssistantRepository(url="sqlite+pysqlite:///:memory:")
+    )
     service.answer_chain._chain = FakeChain()
     result = service.build_result("换季干燥紧绷", "run_usage")
     assert result.answer == "这是基于证据的回答。"
@@ -60,7 +63,10 @@ def test_provider_usage_is_preserved_when_provider_returns_it() -> None:
 
 
 def test_zero_model_call_branches_are_logged_without_fabricated_usage() -> None:
-    service = SkinAssistantService()
+    # 此断言只关心本次服务的两条记录，不能继承其他测试的持久化审计。
+    service = SkinAssistantService(
+        repository=SqlAssistantRepository(url="sqlite+pysqlite:///:memory:")
+    )
     service.answer_chain._chain = None
 
     recommendation = service.build_result("换季干燥紧绷，预算 600 元", "run_recommendation")

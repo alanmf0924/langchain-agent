@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.oa.database import get_session
 from app.oa.models import User
 from app.oa.security import decode_access_token
-from app.oa.services import load_user, permission_codes
+from app.oa.services import is_active_account, load_user, permission_codes
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -29,7 +29,11 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="登录凭证无效，请重新登录"
         ) from error
     user = await load_user(session, payload["sub"])
-    if user is None or not user.is_active or user.token_version != payload.get("tv"):
+    if (
+        user is None
+        or not await is_active_account(session, user)
+        or user.token_version != payload.get("tv")
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="登录会话已失效，请重新登录"
         )

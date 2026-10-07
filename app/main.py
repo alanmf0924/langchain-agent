@@ -31,6 +31,8 @@ from app.models import (
     AgentTrace,
     CartDraftRequest,
     CartDraftResponse,
+    CatalogProductDetail,
+    CatalogProductPreview,
     EvaluationDataset,
     EvaluationDatasetGenerateRequest,
     EvaluationRunReport,
@@ -193,13 +195,53 @@ def health() -> dict[str, str]:
 
 @app.get(
     "/api/catalog/products",
+    response_model=list[CatalogProductPreview],
     tags=["商品"],
     summary="获取可展示商品",
-    description="仅返回当前已审核、已上架商品。用户确认创建草稿前，服务端仍会重新校验库存与上架状态。",
+    description="仅返回当前数据库中已上架商品的公开预览字段。完整资料需要前台客户登录后读取。",
 )
-def list_products():
-    """返回可展示的商品目录；购买前仍须走实时库存校验。"""
-    return service.available_products()
+def list_products() -> list[CatalogProductPreview]:
+    """公开目录只输出预览字段；购买前仍须走实时库存校验。"""
+    return [
+        CatalogProductPreview(
+            sku_id=product.sku_id,
+            name=product.name,
+            spec=product.spec,
+            price_fen=product.price_fen,
+            tags=product.tags,
+            image_urls=product.image_urls,
+        )
+        for product in service.available_products()
+    ]
+
+
+@app.get(
+    "/api/catalog/products/{sku_id}",
+    response_model=CatalogProductDetail,
+    tags=["商品"],
+    summary="获取登录后的商品完整资料",
+    description="仅当前已上架商品可查看。身份校验不能由前端路由或隐藏字段替代。",
+)
+def get_product_detail(
+    sku_id: str, _: Customer = Depends(get_current_customer)
+) -> CatalogProductDetail:
+    product = service.visible_product(sku_id)
+    if product is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="product is not available")
+    return CatalogProductDetail(
+        sku_id=product.sku_id,
+        name=product.name,
+        spec=product.spec,
+        price_fen=product.price_fen,
+        tags=product.tags,
+        image_urls=product.image_urls,
+        description=product.description,
+        manual=product.manual,
+        ingredients=product.ingredients,
+        ingredient_disclosure_complete=product.ingredient_disclosure_complete,
+        usage=product.usage,
+        cautions=product.cautions,
+    )
 
 
 @app.post(
@@ -512,7 +554,7 @@ def generate_evaluation_dataset(
     "/api/evaluations/datasets/v1-golden",
     response_model=EvaluationDataset,
     tags=["评测"],
-    summary="将 V1 30 条黄金题注册为版本化基线题集",
+    summary="将 V1 黄金题注册为版本化基线题集",
     description="不调用外部模型。题集仍会绑定调用时的知识库和 Prompt 快照，可立刻用于首次基线与后续回归。",
 )
 def create_v1_golden_evaluation_dataset(

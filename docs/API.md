@@ -215,7 +215,7 @@ export async function runAssistant(question: string, onEvent: (event: any) => vo
 
 ### `GET /api/catalog/products`
 
-返回当前可展示商品；商品进入推荐和创建草稿前，服务端仍会重新校验库存和上架状态。
+返回当前数据库中已上架商品的公开预览。该接口不会返回成分、使用方法、注意事项或说明书；商品进入推荐和创建草稿前，服务端仍会重新校验库存和上架状态。
 
 响应示例：
 
@@ -226,16 +226,15 @@ export async function runAssistant(question: string, onEvent: (event: any) => vo
     "name": "澄肌屏障修护精华",
     "spec": "30ml",
     "price_fen": 26800,
-    "stock": 42,
-    "on_sale": true,
-    "approved": true,
     "tags": ["屏障修护"],
-    "ingredients": ["…"],
-    "usage": "…",
-    "cautions": "…"
+    "image_urls": ["/uploads/products/…"]
   }
 ]
 ```
+
+### `GET /api/catalog/products/{sku_id}`
+
+需要前台客户 Bearer access token。仅当商品仍上架时返回完整资料，包括商品说明、说明书、成分披露、使用方法与注意事项；未登录为 `401`，下架或不存在为 `404`。
 
 ### 商品后台：`/api/v1/catalog`
 

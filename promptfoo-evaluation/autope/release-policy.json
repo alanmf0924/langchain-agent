@@ -1,0 +1,33 @@
+{
+  "schema_version": "autope-release-policy-v1",
+  "approval": {
+    "status": "approved",
+    "approved_by": "alanmf0924",
+    "approved_at": "2026-10-07T14:30:00+08:00",
+    "review_ticket": "AUTOPE-0924"
+  },
+  "canary": {
+    "traffic_percent": 5,
+    "observation_minutes": 30
+  },
+  "rollback": {
+    "owner": "alanmf0924",
+    "runbook_url": "https://github.com/alanmf0924/langchain-agent/blob/main/promptfoo-evaluation/autope/rollback-runbook.md",
+    "strategy": "immediate_revert_to_last_approved_prompt_version",
+    "target": "last_approved_prompt_version",
+    "execution": "manual_confirmed",
+    "steps": [
+      "立即停止候选 Prompt 的灰度放量，并冻结该候选的后续发布。",
+      "将线上 Prompt 配置切回已登记的上一版 approved Prompt；不得通过修改黄金集、断言或阈值来消除告警。",
+      "重启或热加载配置后，确认线上生效的 Prompt 版本哈希等于上一版 approved Prompt。",
+      "运行确定性后端测试和 Promptfoo 黄金集；任一硬门禁失败时维持回滚状态并升级为事故处理。",
+      "保留候选晋级报告、灰度指标、触发阈值和回滚时间线，创建复盘记录后才允许重新提交候选。"
+    ]
+  },
+  "rollback_thresholds": {
+    "hard_gate_failure_count": 0,
+    "agent_error_rate": 0.01,
+    "negative_feedback_rate": 0.05,
+    "p95_latency_ms": 3000
+  }
+}

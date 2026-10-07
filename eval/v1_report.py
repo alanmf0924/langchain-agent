@@ -66,7 +66,7 @@ def _transaction_action(result: Any) -> dict[str, Any]:
 def build_v1_golden_report(golden_file: Path = DEFAULT_GOLDEN_FILE) -> dict[str, Any]:
     """逐题执行 V1 基础问答链路并返回可 JSON 序列化的评估结果。
 
-    不抛出单题业务断言失败，让评审报告仍能完整呈现 30 条问题的实际输出；
+    不抛出单题业务断言失败，让评审报告仍能完整呈现全部黄金题的实际输出；
     是否符合黄金集预期由每题 ``checks`` 和顶层汇总共同表达。
     """
     cases = json.loads(golden_file.read_text(encoding="utf-8"))
@@ -218,7 +218,7 @@ def export_report(report: dict[str, Any], output: Path, report_format: ReportFor
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="执行 V1 30 条黄金问题并导出业务评审报告")
+    parser = argparse.ArgumentParser(description="执行 V1 黄金问题并导出业务评审报告")
     parser.add_argument("--golden-file", type=Path, default=DEFAULT_GOLDEN_FILE)
     parser.add_argument("--format", choices=("markdown", "json"), default="markdown")
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT_FILE)

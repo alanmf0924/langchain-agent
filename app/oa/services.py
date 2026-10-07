@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.oa.config import get_oa_settings
-from app.oa.models import OaAuditLog, RefreshSession, Role, User
+from app.oa.models import Department, OaAuditLog, RefreshSession, Role, User
 from app.oa.schemas import CurrentUserResponse
 from app.oa.security import create_access_token, create_opaque_token, hash_opaque_token
 
@@ -37,13 +37,27 @@ def permission_codes(user: User) -> list[str]:
     )
 
 
-def data_scope(user: User) -> str:
-    """返回账号的最宽角色数据范围；直接例外权限不扩大数据范围。"""
+def data_scope(user: User, permission_code: str) -> str:
+    """返回某一权限的最宽角色数据范围；直接例外权限不扩大数据范围。"""
     scope_rank = {"self": 0, "department": 1, "all": 2}
-    active_scopes = [role.data_scope for role in user.roles if role.is_active]
+    active_scopes = [
+        role.data_scope
+        for role in user.roles
+        if role.is_active and permission_code in {permission.code for permission in role.permissions}
+    ]
     if not active_scopes:
         return "self"
     return max(active_scopes, key=lambda item: scope_rank.get(item, 0))
+
+
+async def is_active_account(session: AsyncSession, user: User) -> bool:
+    """部门停用与账号停用同样阻断登录、续期和每一次受保护请求。"""
+    if not user.is_active:
+        return False
+    department_is_active = await session.scalar(
+        select(Department.is_active).where(Department.id == user.department_id)
+    )
+    return department_is_active is True
 
 
 def current_user_response(user: User) -> CurrentUserResponse:

@@ -40,6 +40,31 @@ class Product(BaseModel):
     cautions: str
     # 图片仅来自商品后台的受控上传路径；空数组表示该真实商品尚未维护图片。
     image_urls: list[str] = Field(default_factory=list)
+    # 这两项由商品后台维护。演练数据没有时保留空值，不能由服务端虚构。
+    description: str = ""
+    manual: str = ""
+
+
+class CatalogProductPreview(BaseModel):
+    """未登录可浏览的商品摘要，不暴露说明书、成分与使用注意事项。"""
+
+    sku_id: str
+    name: str
+    spec: str
+    price_fen: int = Field(ge=0)
+    tags: list[str]
+    image_urls: list[str] = Field(default_factory=list)
+
+
+class CatalogProductDetail(CatalogProductPreview):
+    """已登录消费者可查看的完整商品资料；上架状态仍由服务端复核。"""
+
+    description: str = ""
+    manual: str = ""
+    ingredients: list[str] = Field(default_factory=list)
+    ingredient_disclosure_complete: bool = False
+    usage: str = ""
+    cautions: str = ""
 
 
 class DocumentChunk(BaseModel):

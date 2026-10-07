@@ -74,10 +74,15 @@ def test_observability_sends_hashes_and_structured_summary_only(monkeypatch) -> 
         ),
         "completed",
     )
+    observer.record_failure("run-2", "agent_run_failed")
     observer.close()
 
     serialized = json.dumps(span.updates, ensure_ascii=False)
     assert question not in serialized
     assert answer not in serialized
     assert "question_sha256" in serialized
+    assert any(
+        update.get("level") == "ERROR" and update.get("status_message") == "agent_run_failed"
+        for update in span.updates
+    )
     assert context.closed is True

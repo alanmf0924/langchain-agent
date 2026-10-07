@@ -1,0 +1,68 @@
+{
+  "schema_version": "autope-dataset-splits-v1",
+  "approval": {
+    "status": "approved",
+    "approved_by": "alanmf0924",
+    "approved_at": "2026-10-07T14:30:00+08:00",
+    "review_ticket": "AUTOPE-0924"
+  },
+  "splits": {
+    "training": [
+      "simple-01",
+      "simple-03",
+      "vague-01",
+      "vague-04",
+      "complex-02",
+      "complex-04",
+      "noise-01",
+      "noise-04",
+      "knowledge-01",
+      "knowledge-03",
+      "balance-01",
+      "bright-01",
+      "budget-fallback-01",
+      "no-match-01",
+      "incomplete-ingredients-01",
+      "out-of-scope-01",
+      "confirmation-preview-01"
+    ],
+    "validation": [
+      "simple-02",
+      "simple-04",
+      "vague-02",
+      "vague-05",
+      "complex-01",
+      "complex-03",
+      "noise-02",
+      "noise-05",
+      "knowledge-02",
+      "knowledge-04",
+      "safety-01",
+      "safety-03",
+      "balance-02",
+      "budget-fallback-02",
+      "zero-stock-01",
+      "knowledge-oil-01",
+      "confirmation-preview-02"
+    ],
+    "challenge": [
+      "simple-05",
+      "vague-03",
+      "complex-05",
+      "noise-03",
+      "knowledge-05",
+      "safety-02",
+      "safety-04",
+      "safety-05",
+      "bright-02",
+      "no-match-02",
+      "incomplete-ingredients-02",
+      "out-of-scope-02",
+      "out-of-scope-03",
+      "offline-document-01",
+      "knowledge-bright-01",
+      "confirmation-preview-03",
+      "confirmation-preview-04"
+    ]
+  }
+}

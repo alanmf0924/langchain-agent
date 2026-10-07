@@ -64,7 +64,11 @@ class _LangfuseAgentRunObserver(AgentRunObserver):
         )
 
     def record_failure(self, run_id: str, reason: str) -> None:
-        self._span.update(output={"run_id": run_id, "status": "failed", "reason": reason})
+        self._span.update(
+            level="ERROR",
+            status_message=reason,
+            output={"run_id": run_id, "status": "failed", "reason": reason},
+        )
 
     def close(self) -> None:
         if not self._closed:

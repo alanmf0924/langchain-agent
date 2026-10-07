@@ -7,5 +7,23 @@
     "输出面向消费者的纯文本，禁止使用 Markdown 标记、标题、列表符号或代码块。"
   ],
   "candidate_count": 3,
-  "training_case_ids": []
+  "training_case_ids": [
+    "simple-01",
+    "simple-03",
+    "vague-01",
+    "vague-04",
+    "complex-02",
+    "complex-04",
+    "noise-01",
+    "noise-04",
+    "knowledge-01",
+    "knowledge-03",
+    "balance-01",
+    "bright-01",
+    "budget-fallback-01",
+    "no-match-01",
+    "incomplete-ingredients-01",
+    "out-of-scope-01",
+    "confirmation-preview-01"
+  ]
 }

@@ -209,6 +209,10 @@ class SkinAssistantService:
         """商品目录展示过滤；最终推荐还会增加库存过滤。"""
         return self.catalog.list_visible()
 
+    def visible_product(self, sku_id: str) -> Product | None:
+        """完整商品页的实时可见性检查；上架状态改变后旧链接不能继续展示。"""
+        return self.catalog.get_visible_by_sku(sku_id)
+
     def compose_answer(
         self, question: str, evidence: list[dict[str, Any]], completed_model_calls: int
     ) -> GeneratedAnswer:

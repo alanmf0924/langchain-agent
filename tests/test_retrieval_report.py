@@ -13,8 +13,12 @@ def test_retrieval_report_measures_golden_evidence_and_defers_reranker_for_small
     tmp_path: Path,
 ) -> None:
     report = build_retrieval_report()
+    cases = json.loads((Path(__file__).parents[1] / "eval" / "golden_questions.json").read_text())
 
-    assert report["scope"]["evaluated_evidence_cases"] == 20
+    assert report["scope"]["golden_cases"] == len(cases)
+    assert report["scope"]["evaluated_evidence_cases"] == sum(
+        bool(case["expected_evidence_ids"]) for case in cases
+    )
     assert report["scope"]["searchable_document_count"] == 8
     assert report["scope"]["globally_blocked_document_ids"] == ["chunk_offline_v10"]
     assert report["metrics"]["violation_retrieval_rate"] == 0.0

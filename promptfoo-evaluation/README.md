@@ -35,12 +35,15 @@ Promptfoo 是用于自动化评估 LLM / RAG / Agent 的开源工具。它以 Pr
 cd ..
 uv sync --group autope
 cd promptfoo-evaluation
-export AUTOPE_DSPY_MODEL='openai/gpt-4.1-mini'
+export AUTOPE_DSPY_MODEL='openai/deepseek-v4-pro'
 export AUTOPE_DSPY_API_KEY='...'
+export AUTOPE_DSPY_BASE_URL='https://api.deepseek.com'
 npm run autope -- dspy-generate --output autope/local/candidates.json
 ```
 
 候选 brief 位于 `autope/brief.json`。每个候选带系统提示词、Prompt/brief 哈希、训练题 ID 和生成器标识；重复候选、超出数量或删减硬条款会被拒绝。
+
+候选模型调用之前必须由人工填写并批准 `autope/dataset-splits.json`。`training`、`validation`、`challenge` 都必须非空、互不重叠、仅引用黄金集或已批准回流题；`brief.training_case_ids` 必须与 `training` 完全相同。初始文件故意是 `pending_human_approval`，不能用于运行候选评测。
 
 ### Promptfoo 候选门禁
 
@@ -61,14 +64,14 @@ npm run autope -- select-candidate \
 
 通过只会得到 `eligible_for_human_release_review`，不是自动发布。晋级报告要求基线全绿、候选完整覆盖基线并逐题通过、所有记录只有一个已实际加载的候选 ID，且成本不超过上限。
 
-用于 CI 的候选 manifest 必须作为受审查的源码工件放在 `autope/candidates/review/`；本地 DSPy 生成的 `generated-*.json` 仍不提交。根目录的 `autope-candidate.yml` 仅能手动触发，并要求受保护环境中的 `AUTOPE_OPENAI_API_KEY`。它只产生晋级报告，不能直接改动线上 Prompt。
+用于 CI 的候选 manifest 必须作为受审查的源码工件放在 `autope/candidates/review/`；本地 DSPy 生成的 `generated-*.json` 仍不提交。根目录的 `autope-candidate.yml` 仅能手动触发，并要求受保护环境中的 `AUTOPE_DEEPSEEK_API_KEY`，固定使用 `deepseek-v4-pro`。工作流先在同一干净 Runner 生成固定基线，再验证候选；通过后必须有人工批准的 `autope/release-policy.json`，才登记 `pending_human_release_approval` 发布候选记录，不能直接改动线上 Prompt。
 
 ### Langfuse 线上回流
 
-读取端使用 Langfuse v2 Observations API 的 `GENERATION` 行，并强制不超过 7 天的时间窗。原始导出应放在被忽略的 `autope/local/`，不要提交。线上服务端的可选观测依赖通过 `uv sync --group observability` 安装，默认 `LANGFUSE_ENABLED=false`；启用后只发送问题哈希、长度与结构化结果摘要，不使用已弃用的 traces 读取接口。
+读取端使用 Langfuse v2 Observations API 的根 `SPAN` 行，并强制不超过 7 天的时间窗。原始导出应放在被忽略的 `autope/local/`，不要提交。线上服务端的可选观测依赖通过 `uv sync --group observability` 安装，默认 `LANGFUSE_ENABLED=false`；启用后只发送问题哈希、长度与结构化结果摘要，不使用已弃用的 traces 读取接口。
 
 ```bash
-export LANGFUSE_BASE_URL='https://cloud.langfuse.com'
+export LANGFUSE_BASE_URL='https://us.cloud.langfuse.com'
 export LANGFUSE_PUBLIC_KEY='pk-lf-...'
 export LANGFUSE_SECRET_KEY='sk-lf-...'
 npm run autope -- langfuse-fetch \
@@ -80,7 +83,7 @@ npm run autope -- build-review-queue \
   --output autope/local/review-queue.json
 ```
 
-队列只保存 Langfuse trace/observation ID、时间、异常或低分原因、输入输出哈希和长度，不复制线上问答原文。审核人应在 Langfuse 中定位原记录、人工脱敏并补齐 `expected_intent`、`expected_action`、证据允许/禁止集合；批准记录还必须保留 `source.langfuse_trace_id` 与 `source.langfuse_observation_id`。只有 `review_status: "approved"` 的 `online-...` 题会被 `promptfooconfig.autope.yaml` 合并进候选评测。明显手机号和邮箱会被拦截，但人工审核仍须确认没有其他个人信息或敏感健康描述。
+队列只保存 Langfuse trace/observation ID、时间、异常或低分原因、输入输出哈希和长度，不复制线上问答原文。审核人应通过获授权的客服、反馈或质检系统定位原始记录，不能假定 Langfuse 含有原文；人工脱敏并补齐 `expected_intent`、`expected_action`、证据允许/禁止集合。批准记录还必须保留 `source.langfuse_trace_id` 与 `source.langfuse_observation_id`。只有 `review_status: "approved"` 的 `online-...` 题会被 `promptfooconfig.autope.yaml` 合并进候选评测。明显手机号和邮箱会被拦截，但人工审核仍须确认没有其他个人信息或敏感健康描述。
 
 ```bash
 npm run autope -- validate-reviewed
@@ -91,7 +94,7 @@ npm run test:autope
 
 ## 团队运行与 CI
 
-后端根目录的 `.nvmrc` 固定 Node 24.19.0；先在根目录执行 `nvm use`，再运行评测。`.github/workflows/evaluation.yml` 会在 PR 上执行 Python 静态检查、观测适配层测试、AutoPE 控制面测试和零模型 Promptfoo 黄金门禁，并上传报告作为 30 天构建产物。模型候选评测在单独的手动工作流运行，凭据仅来自受保护环境 Secret。
+后端根目录的 `.nvmrc` 固定 Node 24.19.0；先在根目录执行 `nvm use`，再运行评测。`.github/workflows/evaluation.yml` 会在 PR 上执行完整 Python 静态检查、完整后端测试、AutoPE 控制面测试和零模型 Promptfoo 黄金门禁，并上传报告作为 30 天构建产物。模型候选评测在单独的手动工作流运行，凭据仅来自受保护环境 Secret。
 
 ## 运行
 

@@ -35,7 +35,7 @@ class GroundedAnswerChain:
     def __init__(self) -> None:
         # 本地运行时以项目 .env 为准；测试显式注入隔离数据库，不能被本机密钥配置覆盖。
         load_dotenv(override=os.getenv("APP_ENV") != "test")
-        self.model_name = os.getenv("OPENAI_MODEL", "deepseek-chat")
+        self.model_name = os.getenv("OPENAI_MODEL", "deepseek-v4-pro")
         self.max_output_tokens = int(os.getenv("MODEL_MAX_OUTPUT_TOKENS", DEFAULT_MAX_OUTPUT_TOKENS))
         self.request_timeout_seconds = self._bounded_env_int(
             "MODEL_REQUEST_TIMEOUT_SECONDS", DEFAULT_MODEL_REQUEST_TIMEOUT_SECONDS, 1, 30
@@ -60,7 +60,7 @@ class GroundedAnswerChain:
             return None
         # DeepSeek 使用 OpenAI Chat Completions 兼容协议，因此复用 ChatOpenAI 客户端。
         model = ChatOpenAI(
-            model=os.getenv("OPENAI_MODEL", "deepseek-chat"),
+            model=os.getenv("OPENAI_MODEL", "deepseek-v4-pro"),
             api_key=api_key,
             base_url=os.getenv("OPENAI_BASE_URL"),
             temperature=0,

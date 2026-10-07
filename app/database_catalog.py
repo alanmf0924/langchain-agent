@@ -44,7 +44,24 @@ class DatabaseCatalogRepository:
                 product_image_url(image.storage_key)
                 for image in sorted(item.images, key=lambda image: (image.sort_order, image.id))
             ],
+            description=item.description,
+            manual=item.manual,
         )
+
+    def _visible_products(self) -> list[CatalogProduct]:
+        """商城目录按上架状态展示；是否可被 Agent 推荐由更严格的审核过滤决定。"""
+        try:
+            with Session(self._engine) as session:
+                return list(
+                    session.scalars(
+                        select(CatalogProduct)
+                        .options(selectinload(CatalogProduct.images))
+                        .where(CatalogProduct.on_sale.is_(True))
+                        .order_by(CatalogProduct.sku_id)
+                    )
+                )
+        except Exception as error:  # 真实目录故障不能静默回退到 Mock。
+            raise DatabaseCatalogError("database_catalog_unavailable") from error
 
     def _eligible_products(self) -> list[CatalogProduct]:
         try:
@@ -64,7 +81,19 @@ class DatabaseCatalogRepository:
             raise DatabaseCatalogError("database_catalog_unavailable") from error
 
     def list_visible(self) -> list[Product]:
-        return [self._product(item) for item in self._eligible_products()]
+        return [self._product(item) for item in self._visible_products()]
+
+    def get_visible_by_sku(self, sku_id: str) -> Product | None:
+        try:
+            with Session(self._engine) as session:
+                item = session.scalar(
+                    select(CatalogProduct)
+                    .options(selectinload(CatalogProduct.images))
+                    .where(CatalogProduct.sku_id == sku_id, CatalogProduct.on_sale.is_(True))
+                )
+        except Exception as error:  # 不能将数据库错误伪装成商品不存在。
+            raise DatabaseCatalogError("database_catalog_unavailable") from error
+        return self._product(item) if item is not None else None
 
     def search_available(self, question: str) -> list[Product]:
         normalized = question.lower()

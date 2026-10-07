@@ -58,6 +58,8 @@ from app.oa.schemas import (
 from app.oa.security import hash_opaque_token, hash_password, verify_password
 from app.oa.services import (
     current_user_response,
+    data_scope,
+    is_active_account,
     issue_session,
     load_user,
     permission_codes,
@@ -68,6 +70,92 @@ from app.oa.services import (
 router = APIRouter(
     prefix="/api/v1", tags=["OA 鉴权与权限"], route_class=OaApiRoute
 )
+
+_SCOPE_RANK = {"self": 0, "department": 1, "all": 2}
+_GLOBAL_MANAGEMENT_PERMISSION = {
+    "system:authorization:write": "system:authorization:grant_any",
+    "system:department:write": "system:authorization:grant_any",
+    "system:role:write": "system:role:manage_any",
+    "system:user:write": "system:user:manage_any",
+}
+
+
+def has_global_management_access(actor: User, operation_permission: str) -> bool:
+    override_permission = _GLOBAL_MANAGEMENT_PERMISSION[operation_permission]
+    return override_permission in permission_codes(actor)
+
+
+def assert_actor_can_manage_department(
+    actor: User, department_id: str, operation_permission: str
+) -> None:
+    if has_global_management_access(actor, operation_permission):
+        return
+    scope = data_scope(actor, operation_permission)
+    if scope == "all" or (scope == "department" and actor.department_id == department_id):
+        return
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="不能管理该部门的数据范围")
+
+
+def assert_actor_can_grant_permissions(actor: User, permissions: list[Permission]) -> None:
+    if has_global_management_access(actor, "system:authorization:write"):
+        return
+    actor_codes = set(permission_codes(actor))
+    disallowed = sorted(permission.code for permission in permissions if permission.code not in actor_codes)
+    if disallowed:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"不能授予自身未拥有的权限: {', '.join(disallowed)}",
+        )
+
+
+def assert_actor_can_manage_roles(actor: User, roles: list[Role]) -> None:
+    if has_global_management_access(actor, "system:role:write"):
+        return
+    actor_codes = set(permission_codes(actor))
+    maximum_scope = _SCOPE_RANK[data_scope(actor, "system:role:write")]
+    disallowed = sorted(
+        role.code
+        for role in roles
+        if _SCOPE_RANK.get(role.data_scope, -1) > maximum_scope
+        or any(permission.code not in actor_codes for permission in role.permissions)
+    )
+    if disallowed:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"不能管理超出自身权限或数据范围的角色: {', '.join(disallowed)}",
+        )
+
+
+def assert_actor_can_assign_roles(
+    actor: User, roles: list[Role], operation_permission: str = "system:user:write"
+) -> None:
+    if has_global_management_access(actor, operation_permission):
+        return
+    actor_codes = set(permission_codes(actor))
+    maximum_scope = _SCOPE_RANK[data_scope(actor, operation_permission)]
+    disallowed = sorted(
+        role.code
+        for role in roles
+        if _SCOPE_RANK.get(role.data_scope, -1) > maximum_scope
+        or any(permission.code not in actor_codes for permission in role.permissions)
+    )
+    if disallowed:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"不能分配超出自身权限或数据范围的角色: {', '.join(disallowed)}",
+        )
+
+
+def assert_actor_can_manage_user(actor: User, user: User) -> None:
+    assert_actor_can_manage_department(actor, user.department_id, "system:user:write")
+    assert_actor_can_assign_roles(actor, user.roles)
+
+
+async def revoke_department_users(session: AsyncSession, department_id: str) -> None:
+    users = (await session.scalars(select(User).where(User.department_id == department_id))).all()
+    for user in users:
+        user.token_version += 1
+        await revoke_user_sessions(session, user.id)
 
 
 def department_item(department: Department) -> DepartmentItem:
@@ -244,10 +332,12 @@ async def assert_roles_enabled_for_department(
 
 
 async def replace_department_roles(
-    session: AsyncSession, department: Department, role_codes: list[str]
+    session: AsyncSession, department: Department, role_codes: list[str], actor: User
 ) -> list[Role]:
     """替换部门可分配角色，且不允许让已有账号失去当前角色。"""
     roles = await resolve_roles(session, role_codes)
+    assert_actor_can_manage_department(actor, department.id, "system:authorization:write")
+    assert_actor_can_assign_roles(actor, roles, "system:authorization:write")
     desired_role_codes = {role.code for role in roles}
     assigned_role_codes = set(
         (
@@ -313,7 +403,7 @@ async def login(
     user = await session.scalar(select(User).where(User.username == payload.username))
     if (
         user is None
-        or not user.is_active
+        or not await is_active_account(session, user)
         or not verify_password(payload.password, user.password_hash)
     ):
         await write_audit_log(
@@ -367,7 +457,7 @@ async def refresh(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="登录会话已失效，请重新登录"
         )
     user = await load_user(session, record.user_id)
-    if user is None or not user.is_active:
+    if user is None or not await is_active_account(session, user):
         record.revoked_at = now
         await session.commit()
         clear_refresh_cookies(response)
@@ -646,7 +736,9 @@ async def create_department(
     if payload.role_codes:
         if "system:authorization:write" not in permission_codes(actor):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="missing permission: system:authorization:write")
-        await replace_department_roles(session, department, payload.role_codes)
+        roles = await resolve_roles(session, payload.role_codes)
+        assert_actor_can_assign_roles(actor, roles, "system:authorization:write")
+        department.roles = roles
     session.add(department)
     await write_audit_log(session, actor_id=actor.id, action="system.department.create", outcome="success")
     await session.commit()
@@ -661,6 +753,7 @@ async def update_department(
     session: AsyncSession = Depends(get_session),
 ) -> DepartmentItem:
     department = await department_or_404(session, department_id)
+    assert_actor_can_manage_department(actor, department.id, "system:department:write")
     if payload.name is not None and payload.name != department.name:
         if await session.scalar(select(Department.id).where(Department.name == payload.name)):
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="department name already exists")
@@ -672,11 +765,13 @@ async def update_department(
             await department_or_404(session, payload.parent_id)
         department.parent_id = payload.parent_id
     if payload.is_active is not None:
+        if department.is_active and not payload.is_active:
+            await revoke_department_users(session, department.id)
         department.is_active = payload.is_active
     if payload.role_codes is not None:
         if "system:authorization:write" not in permission_codes(actor):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="missing permission: system:authorization:write")
-        await replace_department_roles(session, department, payload.role_codes)
+        await replace_department_roles(session, department, payload.role_codes, actor)
     await write_audit_log(session, actor_id=actor.id, action="system.department.update", outcome="success")
     await session.commit()
     return department_item(department)
@@ -689,6 +784,7 @@ async def delete_department(
     session: AsyncSession = Depends(get_session),
 ) -> None:
     department = await department_or_404(session, department_id)
+    assert_actor_can_manage_department(actor, department.id, "system:department:write")
     has_child = await session.scalar(select(Department.id).where(Department.parent_id == department.id))
     has_user = await session.scalar(select(User.id).where(User.department_id == department.id))
     has_personnel = await session.scalar(
@@ -844,7 +940,7 @@ async def update_department_roles(
     session: AsyncSession = Depends(get_session),
 ) -> AuthorizationDepartmentItem:
     department = await department_or_404(session, department_id)
-    roles = await replace_department_roles(session, department, payload.role_codes)
+    roles = await replace_department_roles(session, department, payload.role_codes, actor)
     await write_audit_log(
         session,
         actor_id=actor.id,
@@ -893,6 +989,7 @@ async def update_personnel_account_link(
     session: AsyncSession = Depends(get_session),
 ) -> AuthorizationPersonnelItem:
     personnel = await personnel_or_404(session, personnel_id)
+    assert_actor_can_manage_department(actor, personnel.department_id, "system:authorization:write")
     previous_user_id = personnel.user_id
     if payload.user_id is None:
         personnel.user_id = None
@@ -941,6 +1038,7 @@ async def update_personnel_permission_grants(
     session: AsyncSession = Depends(get_session),
 ) -> AuthorizationPersonnelItem:
     personnel = await personnel_or_404(session, personnel_id)
+    assert_actor_can_manage_department(actor, personnel.department_id, "system:authorization:write")
     if not personnel.user_id:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -948,6 +1046,7 @@ async def update_personnel_permission_grants(
         )
     user = await user_or_404(session, personnel.user_id)
     permissions = await resolve_permissions(session, payload.permission_codes)
+    assert_actor_can_grant_permissions(actor, permissions)
     user.permission_grants = permissions
     user.token_version += 1
     await revoke_user_sessions(session, user.id)
@@ -1131,6 +1230,7 @@ async def create_role(
         is_active=payload.is_active,
         permissions=await resolve_permissions(session, payload.permission_codes),
     )
+    assert_actor_can_manage_roles(actor, [role])
     session.add(role)
     await write_audit_log(session, actor_id=actor.id, action="system.role.create", outcome="success")
     await session.commit()
@@ -1145,6 +1245,17 @@ async def update_role(
     session: AsyncSession = Depends(get_session),
 ) -> RoleItem:
     role = await role_or_404(session, role_id)
+    assert_actor_can_manage_roles(actor, [role])
+    next_permissions = (
+        await resolve_permissions(session, payload.permission_codes)
+        if payload.permission_codes is not None
+        else role.permissions
+    )
+    next_scope = payload.data_scope if payload.data_scope is not None else role.data_scope
+    assert_actor_can_manage_roles(
+        actor,
+        [Role(code=role.code, name=role.name, data_scope=next_scope, permissions=next_permissions)],
+    )
     if payload.name is not None:
         role.name = payload.name
     if payload.data_scope is not None:
@@ -1165,6 +1276,7 @@ async def delete_role(
     session: AsyncSession = Depends(get_session),
 ) -> None:
     role = await role_or_404(session, role_id)
+    assert_actor_can_manage_roles(actor, [role])
     assigned = await session.scalar(select(user_roles.c.user_id).where(user_roles.c.role_id == role.id))
     enabled_for_department = await session.scalar(
         select(department_roles.c.department_id).where(department_roles.c.role_id == role.id)
@@ -1218,7 +1330,9 @@ async def create_oa_user(
     if not department.is_active:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="department is inactive")
     roles = await resolve_roles(session, payload.role_codes)
+    assert_actor_can_manage_department(actor, department.id, "system:user:write")
     await assert_roles_enabled_for_department(session, department.id, roles)
+    assert_actor_can_assign_roles(actor, roles)
     user = User(
         id=new_id(),
         username=payload.username,
@@ -1242,6 +1356,7 @@ async def update_oa_user(
     session: AsyncSession = Depends(get_session),
 ) -> OaUserItem:
     user = await user_or_404(session, user_id)
+    assert_actor_can_manage_user(actor, user)
     if payload.is_active is False and user.id == actor.id:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="cannot deactivate current OA account")
     security_changed = False
@@ -1251,6 +1366,7 @@ async def update_oa_user(
         department = await department_or_404(session, payload.department_id)
         if not department.is_active:
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="department is inactive")
+        assert_actor_can_manage_department(actor, department.id, "system:user:write")
         user.department_id = department.id
     target_department_id = payload.department_id or user.department_id
     if payload.is_active is not None and payload.is_active != user.is_active:
@@ -1259,6 +1375,7 @@ async def update_oa_user(
     if payload.role_codes is not None:
         roles = await resolve_roles(session, payload.role_codes)
         await assert_roles_enabled_for_department(session, target_department_id, roles)
+        assert_actor_can_assign_roles(actor, roles)
         user.roles = roles
         security_changed = True
     elif payload.department_id is not None:
@@ -1279,6 +1396,7 @@ async def reset_oa_user_password(
     session: AsyncSession = Depends(get_session),
 ) -> None:
     user = await user_or_404(session, user_id)
+    assert_actor_can_manage_user(actor, user)
     user.password_hash = hash_password(payload.password)
     user.token_version += 1
     await revoke_user_sessions(session, user.id)
@@ -1298,6 +1416,7 @@ async def delete_oa_user(
 ) -> None:
     """逻辑删除账号，保留审计轨迹，避免删除权限变更的责任链。"""
     user = await user_or_404(session, user_id)
+    assert_actor_can_manage_user(actor, user)
     if user.id == actor.id:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="cannot delete current OA account"

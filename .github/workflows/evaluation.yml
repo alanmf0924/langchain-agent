@@ -50,11 +50,10 @@ jobs:
       - name: Check runtime and static quality
         run: |
           npm --prefix promptfoo-evaluation run runtime:check
-          uv run --no-sync ruff check \
-            app/main.py app/observability.py eval tests/test_observability.py promptfoo-evaluation
+          uv run --no-sync ruff check app eval tests promptfoo-evaluation
       - name: Run deterministic backend and AutoPE control-plane tests
         run: |
-          uv run --no-sync pytest tests/test_observability.py -q
+          uv run --no-sync pytest -q
           npm --prefix promptfoo-evaluation run test:autope
       - name: Run Promptfoo golden hard gate
         run: npm --prefix promptfoo-evaluation run eval

@@ -1,17 +1,14 @@
 from __future__ import annotations
 
 import re
-from typing import Annotated, Generic, Literal, TypeVar
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 PermissionKind = Literal["page", "action"]
 DataScope = Literal["all", "department", "self"]
 PersonnelGender = Literal["female", "male", "unspecified"]
-PageItem = TypeVar("PageItem")
-
-
-class PageResult(BaseModel, Generic[PageItem]):
+class PageResult[PageItem](BaseModel):
     """统一的服务端分页契约；选择框另走小型 options 接口。"""
 
     items: list[PageItem]

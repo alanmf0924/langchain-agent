@@ -26,7 +26,9 @@ class Catalog:
             raise ValueError("CATALOG_SOURCE 只能选择一种商品读模型")
         self.products = (
             {} if self.database_catalog is not None or self.mall_gateway is not None
-            else {product.sku_id: product for product in PRODUCTS}
+            # 商品后台编辑和测试中的临时变更不能污染模块级演练资料，否则后续
+            # Catalog 会读取到上一请求留下的价格、库存或成分状态。
+            else {product.sku_id: product.model_copy(deep=True) for product in PRODUCTS}
         )
 
     def search_available(self, question: str, request_id: str = "") -> list[Product]:
@@ -99,13 +101,22 @@ class Catalog:
         ]
 
     def list_visible(self) -> list[Product]:
-        """公开目录仅展示审核且上架的商品；库存为零仍可保留缺货展示。"""
+        """公开目录仅展示上架商品；库存为零仍可保留缺货展示。"""
         if self.database_catalog is not None:
             return self.database_catalog.list_visible()
         if self.mall_gateway is not None:
             # 外部商城读契约只定义推荐候选和批量实时可售性，不能伪造全量展示目录。
             return []
-        return [item for item in self.products.values() if item.approved and item.on_sale]
+        return [item for item in self.products.values() if item.on_sale]
+
+    def get_visible_by_sku(self, sku_id: str) -> Product | None:
+        """完整资料只允许读取当前上架商品，避免下架后仍可通过旧链接访问。"""
+        if self.database_catalog is not None:
+            return self.database_catalog.get_visible_by_sku(sku_id)
+        if self.mall_gateway is not None:
+            return None
+        product = self.products.get(sku_id)
+        return product if product is not None and product.on_sale else None
 
     def evidence_for(self, sku_ids: Iterable[str]) -> list[Evidence]:
         """只返回与已选 SKU 对应、审核通过且在售的资料片段。"""

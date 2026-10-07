@@ -10,9 +10,6 @@ on:
       candidate_id:
         description: Candidate ID from the manifest
         required: true
-      model:
-        description: Fixed model version for this run
-        required: true
       max_cost:
         description: Maximum permitted total candidate evaluation cost
         required: true
@@ -43,18 +40,33 @@ jobs:
         run: uv sync --group dev --group observability
       - name: Install Promptfoo
         run: npm ci --prefix promptfoo-evaluation
+      - name: Validate reviewed candidate source and data contract
+        working-directory: promptfoo-evaluation
+        env:
+          CANDIDATE_MANIFEST: ${{ inputs.candidate_manifest }}
+          CANDIDATE_ID: ${{ inputs.candidate_id }}
+        run: |
+          candidate_file="$PWD/$CANDIDATE_MANIFEST"
+          git -C "$GITHUB_WORKSPACE" ls-files --error-unmatch -- "promptfoo-evaluation/$CANDIDATE_MANIFEST"
+          npm run autope -- validate-dataset-splits
+          npm run autope -- validate-candidate \
+            --input "$candidate_file" \
+            --candidate-id "$CANDIDATE_ID"
+      - name: Build deterministic baseline in this runner
+        working-directory: promptfoo-evaluation
+        run: npm run eval
       - name: Require protected model credentials
         env:
-          OPENAI_API_KEY: ${{ secrets.AUTOPE_OPENAI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.AUTOPE_DEEPSEEK_API_KEY }}
         run: test -n "$OPENAI_API_KEY"
       - name: Run isolated candidate gate
         working-directory: promptfoo-evaluation
         env:
           AUTOPE_CANDIDATE_FILE: ${{ github.workspace }}/promptfoo-evaluation/${{ inputs.candidate_manifest }}
           AUTOPE_CANDIDATE_ID: ${{ inputs.candidate_id }}
-          OPENAI_API_KEY: ${{ secrets.AUTOPE_OPENAI_API_KEY }}
-          OPENAI_BASE_URL: ${{ secrets.AUTOPE_OPENAI_BASE_URL }}
-          OPENAI_MODEL: ${{ inputs.model }}
+          OPENAI_API_KEY: ${{ secrets.AUTOPE_DEEPSEEK_API_KEY }}
+          OPENAI_BASE_URL: https://api.deepseek.com
+          OPENAI_MODEL: deepseek-v4-pro
         run: npm run eval:autope
       - name: Create human-review-only promotion report
         working-directory: promptfoo-evaluation
@@ -64,6 +76,18 @@ jobs:
             --candidate-result reports/autope-candidate-results.json \
             --output reports/autope-promotion-report.json \
             --max-cost '${{ inputs.max_cost }}'
+      - name: Register candidate for human release approval
+        working-directory: promptfoo-evaluation
+        env:
+          CANDIDATE_MANIFEST: ${{ inputs.candidate_manifest }}
+          CANDIDATE_ID: ${{ inputs.candidate_id }}
+        run: |
+          npm run autope -- register-release-candidate \
+            --promotion-report reports/autope-promotion-report.json \
+            --candidate-manifest "$PWD/$CANDIDATE_MANIFEST" \
+            --candidate-id "$CANDIDATE_ID" \
+            --release-policy autope/release-policy.json \
+            --output reports/autope-release-candidate.json
       - name: Upload candidate report
         if: always()
         uses: actions/upload-artifact@v4

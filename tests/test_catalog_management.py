@@ -103,11 +103,18 @@ async def reset_and_seed_catalog_self_scope() -> None:
         other_department = Department(id=new_id(), name="运营部", parent_id="")
         read = Permission(code="catalog:product:read", name="查看商品", kind="page")
         write = Permission(code="catalog:product:write", name="维护商品", kind="action")
+        unrelated_read = Permission(code="system:user:read", name="查看登录账号", kind="page")
         role = Role(
             code="catalog_self",
             name="本人商品运营",
             data_scope="self",
             permissions=[read, write],
+        )
+        unrelated_all_scope_role = Role(
+            code="unrelated_all_scope",
+            name="无关的全量范围角色",
+            data_scope="all",
+            permissions=[unrelated_read],
         )
         actor = User(
             id=new_id(),
@@ -115,7 +122,7 @@ async def reset_and_seed_catalog_self_scope() -> None:
             display_name="本人运营",
             password_hash=hash_password("CorrectHorseBatteryStaple1!"),
             department_id=department.id,
-            roles=[role],
+            roles=[role, unrelated_all_scope_role],
         )
         colleague = User(
             id=new_id(),
@@ -137,7 +144,9 @@ async def reset_and_seed_catalog_self_scope() -> None:
                 other_department,
                 read,
                 write,
+                unrelated_read,
                 role,
+                unrelated_all_scope_role,
                 actor,
                 colleague,
                 outsider,
@@ -158,7 +167,7 @@ async def reset_and_seed_catalog_self_scope() -> None:
         await session.commit()
 
 
-def test_catalog_self_data_scope_hides_and_blocks_other_people_products() -> None:
+def test_catalog_scope_uses_the_catalog_permission_not_an_unrelated_all_scope_role() -> None:
     asyncio.run(reset_and_seed_catalog_self_scope())
     with TestClient(app) as client:
         headers = login_catalog_admin(client, "scoped-user")

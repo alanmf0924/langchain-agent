@@ -54,7 +54,7 @@ def _configure_candidate_chain(service: SkinAssistantService, candidate: dict[st
 
     answer_chain = service.answer_chain
     model = ChatOpenAI(
-        model=os.getenv("OPENAI_MODEL", "deepseek-chat"),
+        model=os.getenv("OPENAI_MODEL", "deepseek-v4-pro"),
         api_key=api_key,
         base_url=os.getenv("OPENAI_BASE_URL"),
         temperature=0,

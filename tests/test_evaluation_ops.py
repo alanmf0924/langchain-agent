@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -122,7 +125,8 @@ def test_evaluation_api_runs_v1_golden_baseline_without_external_models(
     client = TestClient(app)
     dataset = client.post("/api/evaluations/datasets/v1-golden")
     assert dataset.status_code == 200
-    assert len(dataset.json()["cases"]) == 30
+    golden_file = Path(__file__).parents[1] / "eval" / "golden_questions.json"
+    assert len(dataset.json()["cases"]) == len(json.loads(golden_file.read_text(encoding="utf-8")))
 
     report = client.post(
         "/api/evaluations/runs",

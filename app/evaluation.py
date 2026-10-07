@@ -55,7 +55,9 @@ class OpenAIEvaluationLlm:
         api_key = os.getenv("EVAL_OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
         if not api_key:
             raise EvaluationModelNotConfigured("未配置 EVAL_OPENAI_API_KEY")
-        self.model_name = os.getenv("EVAL_OPENAI_MODEL", os.getenv("OPENAI_MODEL", "deepseek-chat"))
+        self.model_name = os.getenv(
+            "EVAL_OPENAI_MODEL", os.getenv("OPENAI_MODEL", "deepseek-v4-pro")
+        )
         self._model = ChatOpenAI(
             model=self.model_name,
             api_key=api_key,
@@ -213,7 +215,7 @@ class EvaluationOps:
 
     @staticmethod
     def v1_golden_cases() -> list[EvaluationCase]:
-        """把既有 30 条黄金题纳入同一版本化平台，作为无需 Eval LLM 的第一条基线。"""
+        """把既有黄金题纳入同一版本化平台，作为无需 Eval LLM 的第一条基线。"""
         golden_file = Path(__file__).resolve().parents[1] / "eval" / "golden_questions.json"
         raw_cases = json.loads(golden_file.read_text(encoding="utf-8"))
         return [

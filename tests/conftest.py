@@ -24,7 +24,8 @@ def oa_operations_access():
                 data_scope="all",
                 permissions=[SimpleNamespace(code=code) for code in ALL_PERMISSION_CODES],
             )
-        ]
+        ],
+        permission_grants=[],
     )
     app.dependency_overrides[get_current_user] = lambda: user
     yield

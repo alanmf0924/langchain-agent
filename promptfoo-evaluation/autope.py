@@ -22,6 +22,10 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent
 DEFAULT_BRIEF = ROOT / "autope" / "brief.json"
 DEFAULT_REVIEWED_CASES = ROOT / "autope" / "reviewed_cases.json"
+DEFAULT_DATASET_SPLITS = ROOT / "autope" / "dataset-splits.json"
+DEFAULT_RELEASE_POLICY = ROOT / "autope" / "release-policy.json"
+DEFAULT_CANDIDATE_REVIEW_DIR = ROOT / "autope" / "candidates" / "review"
+SPLIT_NAMES = ("training", "validation", "challenge")
 REQUIRED_CASE_FIELDS = (
     "id",
     "dimension",
@@ -108,6 +112,98 @@ def _brief(path: Path) -> dict[str, Any]:
     return value
 
 
+def _golden_case_ids() -> set[str]:
+    value = _read_json(ROOT.parent / "eval" / "golden_questions.json")
+    if not isinstance(value, list):
+        raise AutoPEError("黄金集必须是 JSON 数组")
+    ids = {row.get("id") for row in value if isinstance(row, dict)}
+    if not ids or not all(isinstance(case_id, str) and case_id for case_id in ids):
+        raise AutoPEError("黄金集包含无效 case id")
+    return ids
+
+
+def load_dataset_splits(path: Path | None = None, brief_path: Path | None = None) -> dict[str, Any]:
+    """验证训练、筛选和挑战题严格互斥，且只能引用已知题目。"""
+    value = _read_json(path or DEFAULT_DATASET_SPLITS)
+    if not isinstance(value, dict) or value.get("schema_version") != "autope-dataset-splits-v1":
+        raise AutoPEError("dataset splits 必须是 schema_version=autope-dataset-splits-v1 的对象")
+    approval = value.get("approval")
+    if not isinstance(approval, dict) or approval.get("status") != "approved":
+        raise AutoPEError("dataset splits 必须经人工批准后才能用于候选评测")
+    if not all(isinstance(approval.get(key), str) and approval[key] for key in ("approved_by", "approved_at", "review_ticket")):
+        raise AutoPEError("dataset splits approval 缺少 approved_by、approved_at 或 review_ticket")
+    _parse_iso8601(approval["approved_at"], "dataset splits approval.approved_at")
+    splits = value.get("splits")
+    if not isinstance(splits, dict) or set(splits) != set(SPLIT_NAMES):
+        raise AutoPEError("dataset splits 必须且只能包含 training、validation、challenge")
+    known_case_ids = _golden_case_ids() | {case["id"] for case in load_approved_cases()}
+    seen: set[str] = set()
+    normalized_splits: dict[str, list[str]] = {}
+    for name in SPLIT_NAMES:
+        case_ids = splits[name]
+        if not isinstance(case_ids, list) or not case_ids or not all(isinstance(case_id, str) for case_id in case_ids):
+            raise AutoPEError(f"dataset splits.{name} 必须是非空字符串数组")
+        unknown = set(case_ids) - known_case_ids
+        if unknown:
+            raise AutoPEError(f"dataset splits.{name} 包含未知题目：{min(unknown)}")
+        duplicate = seen.intersection(case_ids)
+        if duplicate:
+            raise AutoPEError(f"dataset splits 题目不得跨集合复用：{min(duplicate)}")
+        seen.update(case_ids)
+        normalized_splits[name] = list(case_ids)
+    brief = _brief(brief_path or DEFAULT_BRIEF)
+    if set(brief["training_case_ids"]) != set(normalized_splits["training"]):
+        raise AutoPEError("brief.training_case_ids 必须与 dataset splits.training 完全一致")
+    return {"approval": approval, "splits": normalized_splits}
+
+
+def load_release_policy(path: Path | None = None) -> dict[str, Any]:
+    """发布前必须有经批准的灰度、观察和回滚责任，不能由候选评测推断。"""
+    value = _read_json(path or DEFAULT_RELEASE_POLICY)
+    if not isinstance(value, dict) or value.get("schema_version") != "autope-release-policy-v1":
+        raise AutoPEError("release policy 必须是 schema_version=autope-release-policy-v1 的对象")
+    approval = value.get("approval")
+    if not isinstance(approval, dict) or approval.get("status") != "approved":
+        raise AutoPEError("release policy 必须经人工批准后才能登记发布候选")
+    if not all(isinstance(approval.get(key), str) and approval[key] for key in ("approved_by", "approved_at", "review_ticket")):
+        raise AutoPEError("release policy approval 缺少 approved_by、approved_at 或 review_ticket")
+    _parse_iso8601(approval["approved_at"], "release policy approval.approved_at")
+    canary = value.get("canary")
+    if not isinstance(canary, dict):
+        raise AutoPEError("release policy 缺少 canary")
+    percent = canary.get("traffic_percent")
+    observation_minutes = canary.get("observation_minutes")
+    if not isinstance(percent, int) or not 1 <= percent <= 50:
+        raise AutoPEError("release policy canary.traffic_percent 必须在 1 到 50")
+    if not isinstance(observation_minutes, int) or not 5 <= observation_minutes <= 1440:
+        raise AutoPEError("release policy canary.observation_minutes 必须在 5 到 1440")
+    rollback = value.get("rollback")
+    if not isinstance(rollback, dict) or not all(
+        isinstance(rollback.get(key), str) and rollback[key] for key in ("owner", "runbook_url")
+    ):
+        raise AutoPEError("release policy rollback 缺少 owner 或 runbook_url")
+    if rollback.get("strategy") != "immediate_revert_to_last_approved_prompt_version":
+        raise AutoPEError("release policy rollback.strategy 必须回退到上一版已批准 Prompt")
+    if rollback.get("target") != "last_approved_prompt_version":
+        raise AutoPEError("release policy rollback.target 必须是上一版已批准 Prompt")
+    if rollback.get("execution") != "manual_confirmed":
+        raise AutoPEError("release policy rollback.execution 必须要求人工确认")
+    steps = rollback.get("steps")
+    if not isinstance(steps, list) or len(steps) < 4 or not all(isinstance(step, str) and step for step in steps):
+        raise AutoPEError("release policy rollback.steps 必须包含至少 4 个可执行步骤")
+    thresholds = value.get("rollback_thresholds")
+    if not isinstance(thresholds, dict) or not thresholds:
+        raise AutoPEError("release policy 必须声明 rollback_thresholds")
+    if not all(isinstance(value, (int, float)) and value >= 0 for value in thresholds.values()):
+        raise AutoPEError("release policy rollback_thresholds 必须是非负数")
+    return {
+        "approval": approval,
+        "canary": {"traffic_percent": percent, "observation_minutes": observation_minutes},
+        "rollback": rollback,
+        "rollback_thresholds": thresholds,
+    }
+
+
 def _parse_candidate_response(raw: str) -> list[dict[str, str]]:
     """DSPy 输出必须是 JSON，拒绝从自然语言猜测候选内容。"""
     cleaned = raw.strip()
@@ -186,7 +282,7 @@ def _dspy_response(brief: dict[str, Any], baseline_prompt: str) -> str:
         raise AutoPEError("未安装 dspy；请在隔离评测环境安装 dspy 后重试") from error
     model = os.getenv("AUTOPE_DSPY_MODEL")
     if not model:
-        raise AutoPEError("缺少 AUTOPE_DSPY_MODEL，例如 openai/gpt-4.1-mini")
+        raise AutoPEError("缺少 AUTOPE_DSPY_MODEL，例如 openai/deepseek-v4-pro")
     lm_kwargs: dict[str, str] = {"api_key": os.getenv("AUTOPE_DSPY_API_KEY", os.getenv("OPENAI_API_KEY", ""))}
     if base_url := os.getenv("AUTOPE_DSPY_BASE_URL"):
         lm_kwargs["api_base"] = base_url
@@ -242,6 +338,71 @@ def load_candidate_file(path: Path) -> dict[str, str]:
     return {key: selected[key] for key in required}
 
 
+def validate_reviewed_candidate(
+    path: Path,
+    candidate_id: str,
+    brief_path: Path | None = None,
+    dataset_splits_path: Path | None = None,
+) -> dict[str, str]:
+    """只允许经代码审查的 manifest 进入有模型调用的候选工作流。"""
+    try:
+        resolved_path = path.resolve(strict=True)
+    except FileNotFoundError as error:
+        raise AutoPEError(f"找不到候选 manifest：{path}") from error
+    try:
+        resolved_path.relative_to(DEFAULT_CANDIDATE_REVIEW_DIR.resolve(strict=True))
+    except ValueError as error:
+        raise AutoPEError("候选 manifest 必须位于 autope/candidates/review/") from error
+    if resolved_path.suffix != ".json":
+        raise AutoPEError("候选 manifest 必须是 JSON 文件")
+
+    manifest = _read_json(resolved_path)
+    if not isinstance(manifest, dict) or manifest.get("schema_version") != "autope-candidates-v1":
+        raise AutoPEError("候选必须是 autope-candidates-v1 manifest")
+    candidates = manifest.get("candidates")
+    if not isinstance(candidates, list):
+        raise AutoPEError("候选 manifest 缺少 candidates 数组")
+    selected = next((item for item in candidates if isinstance(item, dict) and item.get("candidate_id") == candidate_id), None)
+    if selected is None:
+        raise AutoPEError(f"候选 manifest 中不存在 {candidate_id}")
+
+    brief = _brief(brief_path or DEFAULT_BRIEF)
+    splits = load_dataset_splits(dataset_splits_path, brief_path)
+    baseline = _baseline_system_prompt()
+    required = (
+        "candidate_id",
+        "generator",
+        "hypothesis",
+        "system_prompt",
+        "system_prompt_sha256",
+        "baseline_prompt_sha256",
+        "required_clauses_sha256",
+        "training_case_ids",
+    )
+    if not all(isinstance(selected.get(key), str) and selected[key] for key in required[:-1]):
+        raise AutoPEError("候选缺少必填字段")
+    if selected["generator"] != "dspy":
+        raise AutoPEError("受审查候选必须标记 generator=dspy")
+    if not isinstance(selected["training_case_ids"], list) or set(selected["training_case_ids"]) != set(splits["splits"]["training"]):
+        raise AutoPEError("候选 training_case_ids 与批准的训练集不一致")
+    if manifest.get("brief_sha256") != _json_hash(brief):
+        raise AutoPEError("候选 manifest 与当前 brief 不一致")
+    if selected["baseline_prompt_sha256"] != _text_hash(baseline):
+        raise AutoPEError("候选不是基于当前业务 SYSTEM_PROMPT 生成")
+    if selected["system_prompt_sha256"] != _text_hash(selected["system_prompt"]):
+        raise AutoPEError("候选 system_prompt_sha256 不匹配")
+    if selected["required_clauses_sha256"] != _json_hash(brief["required_clauses"]):
+        raise AutoPEError("候选 required_clauses_sha256 不匹配")
+    missing = [clause for clause in brief["required_clauses"] if clause not in selected["system_prompt"]]
+    if missing:
+        raise AutoPEError(f"候选删除了不可放宽条款：{missing[0]}")
+    return {
+        "candidate_id": selected["candidate_id"],
+        "system_prompt_sha256": selected["system_prompt_sha256"],
+        "baseline_prompt_sha256": selected["baseline_prompt_sha256"],
+    }
+
+
 def _base_url(value: str) -> str:
     parsed = urllib.parse.urlparse(value)
     if parsed.scheme not in {"https", "http"} or not parsed.netloc:
@@ -273,7 +434,9 @@ def fetch_langfuse_observations(
         query = {
             "fromStartTime": start.isoformat().replace("+00:00", "Z"),
             "toStartTime": end.isoformat().replace("+00:00", "Z"),
-            "type": "GENERATION",
+            # 线上服务只创建不含原文的根 SPAN；候选回流必须读取同一类型，
+            # 而不是假定存在包含 Prompt 的 GENERATION 记录。
+            "type": "SPAN",
             "fields": "core,basic,io,metadata,usage,metrics,trace_context",
             "limit": str(min(1000, limit - len(observations))),
         }
@@ -527,6 +690,56 @@ def select_candidate(
     return report
 
 
+def register_release_candidate(
+    promotion_report_path: Path,
+    candidate_manifest_path: Path,
+    candidate_id: str,
+    dataset_splits_path: Path,
+    release_policy_path: Path,
+    output_path: Path,
+) -> dict[str, Any]:
+    """冻结一次候选晋级证据，登记为待人工发布，而不是部署业务 Prompt。"""
+    report = _read_json(promotion_report_path)
+    if not isinstance(report, dict) or report.get("schema_version") != "autope-promotion-report-v1":
+        raise AutoPEError("晋级报告必须是 autope-promotion-report-v1")
+    if report.get("decision") != "eligible_for_human_release_review":
+        raise AutoPEError("只有 eligible_for_human_release_review 候选可以登记发布复核")
+    if report.get("candidate_id") != candidate_id:
+        raise AutoPEError("晋级报告 candidate_id 与登记对象不一致")
+    candidate = validate_reviewed_candidate(candidate_manifest_path, candidate_id, dataset_splits_path=dataset_splits_path)
+    splits = load_dataset_splits(dataset_splits_path)
+    policy = load_release_policy(release_policy_path)
+    promotion_report = _read_json(promotion_report_path)
+    manifest = _read_json(candidate_manifest_path)
+    record_identity = _json_hash(
+        {
+            "candidate_id": candidate_id,
+            "candidate_prompt_sha256": candidate["system_prompt_sha256"],
+            "promotion_report_sha256": _json_hash(promotion_report),
+            "dataset_splits_sha256": _json_hash(splits),
+            "release_policy_sha256": _json_hash(policy),
+        }
+    )
+    record = {
+        "schema_version": "autope-release-candidate-v1",
+        "release_candidate_id": f"release_{record_identity[:16]}",
+        "created_at": _utc_now(),
+        "status": "pending_human_release_approval",
+        "candidate": candidate,
+        "promotion_report_sha256": _json_hash(promotion_report),
+        "candidate_manifest_sha256": _json_hash(manifest),
+        "dataset_splits_sha256": _json_hash(splits),
+        "release_policy_sha256": _json_hash(policy),
+        "required_human_controls": [
+            "independent_release_approval",
+            "approved_canary_policy",
+            "approved_rollback_owner",
+        ],
+    }
+    _write_json(output_path, record)
+    return record
+
+
 def _command_dspy_generate(args: argparse.Namespace) -> int:
     manifest = generate_dspy_candidates(Path(args.brief), Path(args.output))
     print(json.dumps({"candidates": len(manifest["candidates"]), "output": args.output}, ensure_ascii=False))
@@ -551,10 +764,48 @@ def _command_validate_reviewed(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_validate_dataset_splits(args: argparse.Namespace) -> int:
+    splits = load_dataset_splits(Path(args.input), Path(args.brief))
+    print(
+        json.dumps(
+            {"training": len(splits["splits"]["training"]), "validation": len(splits["splits"]["validation"]), "challenge": len(splits["splits"]["challenge"])},
+            ensure_ascii=False,
+        )
+    )
+    return 0
+
+
+def _command_validate_candidate(args: argparse.Namespace) -> int:
+    candidate = validate_reviewed_candidate(
+        Path(args.input), args.candidate_id, Path(args.brief), Path(args.dataset_splits)
+    )
+    print(json.dumps(candidate, ensure_ascii=False))
+    return 0
+
+
+def _command_validate_release_policy(args: argparse.Namespace) -> int:
+    policy = load_release_policy(Path(args.input))
+    print(json.dumps(policy, ensure_ascii=False))
+    return 0
+
+
 def _command_select(args: argparse.Namespace) -> int:
     report = select_candidate(Path(args.baseline), Path(args.candidate_result), Path(args.output), args.max_cost)
     print(json.dumps({"decision": report["decision"], "output": args.output}, ensure_ascii=False))
     return 0 if report["decision"] == "eligible_for_human_release_review" else 2
+
+
+def _command_register_release_candidate(args: argparse.Namespace) -> int:
+    record = register_release_candidate(
+        Path(args.promotion_report),
+        Path(args.candidate_manifest),
+        args.candidate_id,
+        Path(args.dataset_splits),
+        Path(args.release_policy),
+        Path(args.output),
+    )
+    print(json.dumps({"release_candidate_id": record["release_candidate_id"], "output": args.output}, ensure_ascii=False))
+    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -577,12 +828,33 @@ def build_parser() -> argparse.ArgumentParser:
     validate = commands.add_parser("validate-reviewed", help="校验人工批准的线上回流题")
     validate.add_argument("--input", default=str(DEFAULT_REVIEWED_CASES))
     validate.set_defaults(handler=_command_validate_reviewed)
+    splits = commands.add_parser("validate-dataset-splits", help="校验人工批准的数据集切分")
+    splits.add_argument("--input", default=str(DEFAULT_DATASET_SPLITS))
+    splits.add_argument("--brief", default=str(DEFAULT_BRIEF))
+    splits.set_defaults(handler=_command_validate_dataset_splits)
+    candidate = commands.add_parser("validate-candidate", help="校验受审查候选 manifest")
+    candidate.add_argument("--input", required=True)
+    candidate.add_argument("--candidate-id", required=True)
+    candidate.add_argument("--brief", default=str(DEFAULT_BRIEF))
+    candidate.add_argument("--dataset-splits", default=str(DEFAULT_DATASET_SPLITS))
+    candidate.set_defaults(handler=_command_validate_candidate)
+    policy = commands.add_parser("validate-release-policy", help="校验人工批准的灰度与回滚策略")
+    policy.add_argument("--input", default=str(DEFAULT_RELEASE_POLICY))
+    policy.set_defaults(handler=_command_validate_release_policy)
     select = commands.add_parser("select-candidate", help="生成仅供人工发布复核的候选晋级报告")
     select.add_argument("--baseline", required=True)
     select.add_argument("--candidate-result", required=True)
     select.add_argument("--output", required=True)
     select.add_argument("--max-cost", type=float, default=2.0)
     select.set_defaults(handler=_command_select)
+    register = commands.add_parser("register-release-candidate", help="登记待人工发布复核的候选")
+    register.add_argument("--promotion-report", required=True)
+    register.add_argument("--candidate-manifest", required=True)
+    register.add_argument("--candidate-id", required=True)
+    register.add_argument("--dataset-splits", default=str(DEFAULT_DATASET_SPLITS))
+    register.add_argument("--release-policy", default=str(DEFAULT_RELEASE_POLICY))
+    register.add_argument("--output", required=True)
+    register.set_defaults(handler=_command_register_release_candidate)
     return parser
 
 

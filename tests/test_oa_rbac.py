@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
 from app.customer.database import SessionLocal as CustomerSessionLocal
 from app.customer.database import engine as customer_engine
@@ -10,7 +11,16 @@ from app.customer.models import Customer, CustomerBase
 from app.customer.security import hash_password as hash_customer_password
 from app.main import app
 from app.oa.database import SessionLocal, engine
-from app.oa.models import Base, Department, Permission, Role, User, department_roles, new_id
+from app.oa.models import (
+    Base,
+    Department,
+    Permission,
+    Personnel,
+    Role,
+    User,
+    department_roles,
+    new_id,
+)
 from app.oa.permission_catalog import PERMISSION_DEFINITIONS
 from app.oa.security import hash_password
 
@@ -492,3 +502,104 @@ def test_department_role_constraints_and_personnel_exception_grants_are_traceabl
             item["source"] == "direct" and item["code"] == "catalog:write"
             for item in oa_data(effective)["effective_permissions"]
         )
+
+
+def test_deactivated_department_invalidates_existing_sessions() -> None:
+    asyncio.run(reset_and_seed())
+    with TestClient(app) as client:
+        admin = login(client, "admin")
+        admin_headers = {"Authorization": f"Bearer {admin['access_token']}"}
+        department = oa_data(
+            client.post("/api/v1/system/departments", json={"name": "待停用部门"}, headers=admin_headers)
+        )
+        assert client.put(
+            f"/api/v1/authorization/departments/{department['id']}/roles",
+            json={"role_codes": ["employee"]},
+            headers=admin_headers,
+        ).status_code == 200
+        account = oa_data(
+            client.post(
+                "/api/v1/system/users",
+                json={
+                    "username": "disabled-department-user",
+                    "password": "CorrectHorseBatteryStaple1!",
+                    "display_name": "待停用账号",
+                    "department_id": department["id"],
+                    "role_codes": ["employee"],
+                },
+                headers=admin_headers,
+            )
+        )
+        session = login(client, "disabled-department-user")
+        user_headers = {"Authorization": f"Bearer {session['access_token']}"}
+        assert client.patch(
+            f"/api/v1/system/departments/{department['id']}",
+            json={"is_active": False},
+            headers=admin_headers,
+        ).status_code == 200
+        assert client.get("/api/v1/auth/me", headers=user_headers).status_code == 401
+        assert client.post(
+            "/api/v1/auth/login",
+            json={"username": account["username"], "password": "CorrectHorseBatteryStaple1!"},
+        ).status_code == 401
+
+
+def test_delegated_manager_cannot_create_or_grant_more_powerful_access() -> None:
+    asyncio.run(reset_and_seed())
+
+    async def seed_delegated_manager() -> tuple[str, str]:
+        async with SessionLocal() as session:
+            department = await session.scalar(select(Department).where(Department.name == "技术部"))
+            permissions = (
+                await session.scalars(
+                    select(Permission).where(
+                        Permission.code.in_({"system:user:write", "system:authorization:write"})
+                    )
+                )
+            ).all()
+            role = Role(
+                code="delegated_manager",
+                name="受限授权管理员",
+                data_scope="all",
+                permissions=permissions,
+            )
+            user = User(
+                username="delegated-manager",
+                display_name="受限授权管理员",
+                password_hash=hash_password("CorrectHorseBatteryStaple1!"),
+                department_id=department.id,
+                roles=[role],
+            )
+            session.add_all([role, user])
+            await session.flush()
+            personnel = Personnel(
+                name="受限授权管理员",
+                department_id=department.id,
+                user_id=user.id,
+            )
+            session.add(personnel)
+            await session.commit()
+            return personnel.id, department.id
+
+    personnel_id, department_id = asyncio.run(seed_delegated_manager())
+    with TestClient(app) as client:
+        manager = login(client, "delegated-manager")
+        headers = {"Authorization": f"Bearer {manager['access_token']}"}
+        created = client.post(
+            "/api/v1/system/users",
+            json={
+                "username": "attempted-admin",
+                "password": "CorrectHorseBatteryStaple1!",
+                "display_name": "越权尝试",
+                "department_id": department_id,
+                "role_codes": ["system_admin"],
+            },
+            headers=headers,
+        )
+        assert created.status_code == 403
+        granted = client.put(
+            f"/api/v1/authorization/personnel/{personnel_id}/permission-grants",
+            json={"permission_codes": ["system:role:manage_any"]},
+            headers=headers,
+        )
+        assert granted.status_code == 403

@@ -64,9 +64,9 @@ def product_item(product: CatalogProduct) -> CatalogProductItem:
     )
 
 
-def creator_scope_predicate(creator_id_column, actor: User):
+def creator_scope_predicate(creator_id_column, actor: User, permission_code: str):
     """将角色数据范围落实到由 OA 账号创建的业务数据。"""
-    scope = data_scope(actor)
+    scope = data_scope(actor, permission_code)
     if scope == "all":
         return True
     if scope == "department":
@@ -76,13 +76,15 @@ def creator_scope_predicate(creator_id_column, actor: User):
     return creator_id_column == actor.id
 
 
-async def product_or_404(session: AsyncSession, product_id: str, actor: User) -> CatalogProduct:
+async def product_or_404(
+    session: AsyncSession, product_id: str, actor: User, permission_code: str
+) -> CatalogProduct:
     product = await session.scalar(
         select(CatalogProduct)
         .options(selectinload(CatalogProduct.images))
         .where(
             CatalogProduct.id == product_id,
-            creator_scope_predicate(CatalogProduct.created_by, actor),
+            creator_scope_predicate(CatalogProduct.created_by, actor, permission_code),
         )
     )
     if product is None:
@@ -99,7 +101,9 @@ async def resolve_images(
         await session.scalars(
             select(CatalogProductImage).where(
                 CatalogProductImage.id.in_(image_ids),
-                creator_scope_predicate(CatalogProductImage.created_by, actor),
+                creator_scope_predicate(
+                    CatalogProductImage.created_by, actor, "catalog:product:write"
+                ),
             )
         )
     ).all()
@@ -191,7 +195,9 @@ async def create_product(
         session, actor_id=actor.id, action="catalog.product.create", outcome="success", detail=product.id
     )
     await session.commit()
-    return product_item(await product_or_404(session, product.id, actor))
+    return product_item(
+        await product_or_404(session, product.id, actor, "catalog:product:write")
+    )
 
 
 @router.get("/products", response_model=PageResult[CatalogProductItem], summary="分页列出后台商品")
@@ -201,7 +207,7 @@ async def list_products(
     actor: User = Depends(require_permission("catalog:product:read")),
     session: AsyncSession = Depends(get_session),
 ) -> PageResult[CatalogProductItem]:
-    scope = creator_scope_predicate(CatalogProduct.created_by, actor)
+    scope = creator_scope_predicate(CatalogProduct.created_by, actor, "catalog:product:read")
     total = await session.scalar(select(func.count()).select_from(CatalogProduct).where(scope)) or 0
     products = (
         await session.scalars(
@@ -222,7 +228,9 @@ async def get_product(
     actor: User = Depends(require_permission("catalog:product:read")),
     session: AsyncSession = Depends(get_session),
 ) -> CatalogProductItem:
-    return product_item(await product_or_404(session, product_id, actor))
+    return product_item(
+        await product_or_404(session, product_id, actor, "catalog:product:read")
+    )
 
 
 @router.patch("/products/{product_id}", response_model=CatalogProductItem, summary="更新商品")
@@ -232,7 +240,7 @@ async def update_product(
     actor: User = Depends(require_permission("catalog:product:write")),
     session: AsyncSession = Depends(get_session),
 ) -> CatalogProductItem:
-    product = await product_or_404(session, product_id, actor)
+    product = await product_or_404(session, product_id, actor, "catalog:product:write")
     if product.revision != payload.expected_revision:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="product revision conflict")
     values = payload.model_dump(exclude_unset=True, exclude={"expected_revision", "image_ids"})
@@ -249,7 +257,9 @@ async def update_product(
     # product.images collection is therefore stale until it is expired; without
     # this, the write succeeds but the PATCH response incorrectly reports no images.
     session.expire(product, ["images"])
-    return product_item(await product_or_404(session, product.id, actor))
+    return product_item(
+        await product_or_404(session, product.id, actor, "catalog:product:write")
+    )
 
 
 @public_router.get("/uploads/products/{storage_key}", include_in_schema=False)
